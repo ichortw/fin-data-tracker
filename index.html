@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AssetTracker 行動資產看板</title>
+    <!-- 引入最頂級的輕量響應式 CSS 框架 Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 利用 Data URI 黑科技將 Web App Manifest 直接內嵌，強迫手機識別為原生 PWA -->
+    <link rel="manifest" href="data:application/json,{%22name%22:%22AssetTracker%20%E8%B3%87%E7%94%A2%E7%9C%8B%E6%9D%BF%22,%22short_name%22:%22AssetTracker%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230f172a%22,%22theme_color%22:%22%231e293b%22}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        body { font-family: 'Microsoft JhengHei', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+        /* 隱藏滾動條但保持功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col pb-safe">
+
+    <!-- 頂部高質感導覽列 -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-4 py-4 pt-8">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">AssetTracker</h1>
+                <p class="text-xs text-slate-400 mt-0.5">行動資產管理系統 (V5 Edge)</p>
+            </div>
+            <!-- 行動控制按鈕組 -->
+            <div class="flex space-x-2">
+                <button onclick="openAddModal()" class="p-2 bg-blue-600 hover:bg-blue-500 rounded-full text-white shadow-lg transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
+                <button onclick="exportAndShareCSV()" class="p-2 bg-cyan-600 hover:bg-cyan-500 rounded-full text-white shadow-lg transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主內容容器 -->
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 overflow-y-auto no-scrollbar">
+        <!-- 配置 Cloudflare API 網址設定卡片 -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 shadow-xl">
+            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">⚡ 您的專屬 Cloudflare Worker 網址 :</label>
+            <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://api.yourdomain.com/price" 
+                   class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-blue-400 focus:outline-none focus:border-blue-500 transition">
+            <p class="text-[11px] text-slate-500 mt-1.5">請輸入您在 Cloudflare 綁定子網域或產生的路由網址。</p>
+        </div>
+
+        <!-- 業務控制區：一鍵重新整理 -->
+        <div class="mb-6">
+            <button id="updateBtn" onclick="updateAllOnlinePrices()" 
+                    class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 px-4 rounded-2xl shadow-lg shadow-emerald-950/40 flex justify-center items-center space-x-2 transition active:scale-[0.98]">
+                <span id="btnIcon">🔄</span>
+                <span id="btnText">線上更新報價</span>
+            </button>
+        </div>
+
+        <!-- 資產卡片串流清單 (專為智慧型手機直式螢幕優化) -->
+        <div id="assetListContainer" class="space-y-4">
+            <!-- 動態資料會由 JavaScript 渲染注入於此 -->
+        </div>
+    </main>
+
+    <!-- ➕ 新增資產彈出視窗 (Modal) -->
+    <div id="addModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade-in">
+            <h3 class="text-lg font-bold text-slate-100 mb-4 flex items-center">➕ 新增資產配置</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">ISIN 識別碼 (標準 12 碼)</label>
+                    <input type="text" id="modalIsin" placeholder="例如: HK0000084522" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">資產類別</label>
+                    <select id="modalType" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-white">
+                        <option value="MutualFund">MutualFund (共同基金)</option>
+                        <option value="Bond">Bond (政府公債)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">自訂資產名稱</label>
+                    <input type="text" id="modalAlias" placeholder="例如: PIMCO收益基金" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-white">
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button onclick="closeAddModal()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-medium transition">取消</button>
+                <button onclick="saveNewAsset()" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-bold transition">確認儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 核心運作邏輯 JavaScript -->
+    <script>
+        // 1. 初始化 12 檔黃金核心資產清單 (自動幫用家預填，免除手動打字痛苦)
+        const DEFAULT_ASSETS = [
+            {isin: "GB00BPCJD997", type: "Bond", alias: "英國公債 2053", price: null, time: null},
+            {isin: "US912810UB25", type: "Bond", alias: "美元國債2044", price: null, time: null},
+            {isin: "US912810TW80", type: "Bond", alias: "美元國債 2043", price: null, time: null},
+            {isin: "IE00B92ZW543", type: "MutualFund", alias: "PIMCO收益基金港元派息", price: null, time: null},
+            {isin: "HK0000084522", type: "MutualFund", alias: "JPM全方位入息基金港元派息", price: null, time: null},
+            {isin: "LU1929549753", type: "MutualFund", alias: "FTI入息基金港元派息", price: null, time: null},
+            {isin: "LU0236177068", type: "MutualFund", alias: "BlackRock環球配置基金GBP累積", price: null, time: null},
+            {isin: "HK0000961919", type: "MutualFund", alias: "惠理美元貨幣基金B類港元累積", price: null, time: null},
+            {isin: "LU0788108826", type: "MutualFund", alias: "BlackRock世界黃金基金港元累積", price: null, time: null},
+            {isin: "LU2275660947", type: "MutualFund", alias: "施羅德環球黃金基金港元累積", price: null, time: null},
+            {isin: "IE000W1ABFV2", type: "MutualFund", alias: "PIMCO收益增長基金美元派息", price: null, time: null},
+            {isin: "HK0000503828", type: "MutualFund", alias: "CSOP美元貨幣市場ETF USD (A Dis)", price: null, time: null}
+        ];
+
+        let assets = [];
+        let workerUrl = "";
+
+        // 2. 網頁加載初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            // 載入私有 API 路由
+            workerUrl = localStorage.getItem('tracker_worker_url') || "";
+            document.getElementById('workerUrlInput').value = workerUrl;
+
+            // 載入資產清單
+            const stored = localStorage.getItem('tracker_assets_v5');
+            if (stored) {
+                assets = JSON.parse(stored);
+            } else {
+                assets = [...DEFAULT_ASSETS];
+                saveAssetsToStorage();
+            }
+            renderAssetList();
+        });
+
+        function saveWorkerUrl() {
+            workerUrl = document.getElementById('workerUrlInput').value.trim();
+            localStorage.setItem('tracker_worker_url', workerUrl);
+        }
+
+        function saveAssetsToStorage() {
+            localStorage.setItem('tracker_assets_v5', JSON.stringify(assets));
+        }
+
+        // 3. 渲染手機端精美響應式卡片
+        function renderAssetList() {
+            const container = document.getElementById('assetListContainer');
+            container.innerHTML = "";
+
+            assets.forEach((asset, idx) => {
+                const priceDisplay = asset.price ? parseFloat(asset.price).toFixed(4) : "---";
+                const timeDisplay = asset.time ? asset.time : "尚未更新";
+                const typeColor = asset.type === 'Bond' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-md relative overflow-hidden flex flex-col justify-between";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="pr-8">
+                            <h4 class="font-bold text-slate-100 text-sm leading-snug">${asset.alias}</h4>
+                            <p class="text-xs text-slate-400 font-mono mt-0.5">${asset.isin}</p>
+                        </div>
+                        <span class="text-[10px] px-2 py-0.5 font-bold rounded-full border ${typeColor}">${asset.type}</span>
+                    </div>
+                    <div class="flex justify-between items-end mt-3 pt-2 border-t border-slate-800/60">
+                        <div>
+                            <p class="text-[10px] text-slate-500">更新時間</p>
+                            <p class="text-xs text-slate-400 font-mono mt-0.5">${timeDisplay}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-500">最新報價</p>
+                            <p class="text-lg font-black font-mono text-emerald-400 mt-0.5">${priceDisplay}</p>
+                        </div>
+                    </div>
+                    <!-- 垃圾桶側滑/角落刪除鈕 -->
+                    <button onclick="deleteAsset('${asset.isin}')" class="absolute top-3 right-3 text-slate-600 hover:text-red-400 transition p-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 4. 🚀 核心黑科技：透過私有 CF Worker 進行安全無痛邊緣抓價
+        async function updateAllOnlinePrices() {
+            if (!workerUrl) {
+                alert("請先在上方輸入您的 Cloudflare Worker 網址！");
+                return;
+            }
+
+            const btn = document.getElementById('updateBtn');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnText = document.getElementById('btnText');
+
+            btn.disabled = true;
+            btn.classList.add('opacity-70');
+            btnText.innerText = "正在連線 Edge 更新...";
+            btnIcon.innerText = "⏳";
+
+            for (let i = 0; i < assets.length; i++) {
+                let asset = assets[i];
+                // 拼接出向您自己掌控的 Cloudflare 發送的完全防護請求
+                let targetFetchUrl = `${workerUrl}?isin=${asset.isin}&type=${asset.type}`;
+                
+                try {
+                    let response = await fetch(targetFetchUrl);
+                    if (response.ok) {
+                        let data = await response.json();
+                        if (data.status === 'success') {
+                            assets[i].price = data.price;
+                            assets[i].time = new Date().toLocaleTimeString();
+                        }
+                    }
+                } catch (e) {
+                    console.error("抓取失敗: " + asset.alias, e);
+                }
+                // 毫秒級微小保護間隔，符合優雅調用規範
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            saveAssetsToStorage();
+            renderAssetList();
+
+            btn.disabled = false;
+            btn.classList.remove('opacity-70');
+            btnText.innerText = "線上更新報價";
+            btnIcon.innerText = "🔄";
+
+            // 🎯【高維大滿貫】：更新完成後自動彈出提示，按下確認立刻自動觸發 Web Share 原生分享面板！
+            setTimeout(() => {
+                if(confirm("所有線上資產價格已更新完畢！\n是否立刻將最新數據打包分享/導出？")) {
+                    exportAndShareCSV();
+                }
+            }, 100);
+        }
+
+        // 5. 🚀【突破性佈局】：Web Share API 物理級安全原生分享面板
+        function exportAndShareCSV() {
+            let csvRows = ["排序位置,ISIN碼,資產類型,自訂名稱,最後價格,更新時間"];
+            
+            assets.forEach((asset, idx) => {
+                let p = asset.price ? parseFloat(asset.price).toFixed(4) : "---";
+                let t = asset.time ? asset.time : "尚未更新";
+                csvRows.push(`${idx + 1},${asset.isin},${asset.type},${asset.alias},${p},${t}`);
+            });
+
+            let csvString = csvRows.join("\n");
+            // 加入 \ufeff 微軟 Excel 專用防亂碼黃金簽名
+            let blob = new Blob(["\ufeff" + csvString], { type: "text/csv;charset=utf-8;" });
+            let file = new File([blob], "fin-data.csv", { type: "text/csv" });
+
+            // 判斷手機瀏覽器是否支援 Web Share API 原生檔案分享
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                    files: [file],
+                    title: "AssetTracker 資產數據匯出",
+                    text: "這是由手機端本地安全生成的最新資產報價 CSV 檔案。"
+                }).catch(err => console.log("分享取消或失敗:", err));
+            } else {
+                // 安全降級機制：傳統標準本地安全瀏覽器下載
+                let url = URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.href = url;
+                a.download = "fin-data.csv";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // 6. 新增與刪除 UI 輔助邏輯
+        function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); }
+        document.getElementById('addModal').addEventListener('click', (e) => {
+          if (e.target.id === 'addModal') closeAddModal();
+        });
+        function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); }
+
+        function saveNewAsset() {
+            const isin = document.getElementById('modalIsin').value.trim().upper();
+            const type = document.getElementById('modalType').value;
+            const alias = document.getElementById('modalAlias').value.trim();
+
+            if (!isin || !alias) { alert("欄位不能留白！"); return; }
+            if (isin.length !== 12) { alert("標準國際 ISIN 碼必須為 12 碼！"); return; }
+
+            assets.push({ isin, type, alias, price: null, time: null });
+            saveAssetsToStorage();
+            renderAssetList();
+            closeAddModal();
+            
+            // 清空輸入框
+            document.getElementById('modalIsin').value = "";
+            document.getElementById('modalAlias').value = "";
+        }
+
+        function deleteAsset(isin) {
+            if (confirm("確定要移除這檔資產嗎？")) {
+                assets = assets.filter(a => a.isin !== isin);
+                saveAssetsToStorage();
+                renderAssetList();
+            }
+        }
+    </script>
+</body>
+</html>
