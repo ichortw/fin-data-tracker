@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         body { font-family: 'Microsoft JhengHei', -apple-system, BlinkMacSystemFont, sans-serif; }
+        /* 隱藏滾動條但保持功能 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -37,7 +38,7 @@
     <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 overflow-y-auto no-scrollbar">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 shadow-lg">
             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">⚡ 您的專屬 CLOUDFLARE WORKER 網址：</label>
-            <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev?key=my_ultra_secret_pass_123" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 font-mono text-sm focus:outline-none focus:border-blue-500 transition-colors">
+            <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 font-mono text-sm focus:outline-none focus:border-blue-500 transition-colors">
             <p class="text-[11px] text-slate-500 mt-1.5">填入您的 Cloudflare 網址，系統會自動將其鎖定在本地瀏覽器中。</p>
         </div>
 
@@ -48,7 +49,8 @@
             </button>
         </div>
 
-        <div id="assetContainer"></div>
+        <div id="assetContainer">
+            </div>
     </main>
 
     <div id="addModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 items-center justify-center p-4">
@@ -57,6 +59,7 @@
                 <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <h3 class="text-lg font-bold text-slate-100">新增資產配置</h3>
             </div>
+            
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">ISIN 識別碼 (標準 12 碼)</label>
@@ -74,6 +77,7 @@
                     <input type="text" id="modalName" placeholder="例如: PIMCO收益基金港元派息" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
                 </div>
             </div>
+            
             <div class="grid grid-cols-2 gap-3 mt-8">
                 <button onclick="closeAddModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-3 rounded-xl transition-colors">取消</button>
                 <button onclick="saveNewAsset()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 rounded-xl transition-colors">確認儲存</button>
@@ -82,6 +86,7 @@
     </div>
 
     <script>
+        // 初始內建基本資產
         const defaultAssets = [
             { isin: 'GB00BPCJD997', type: 'bond', name: '英國公債 2053' },
             { isin: 'US912810UB25', type: 'bond', name: '美元國債 2044' },
@@ -91,16 +96,19 @@
             { isin: 'LU1929549753', type: 'mutualfund', name: 'FTI入息基金港元派息' }
         ];
 
+        // 從 localStorage 讀取或初始化資產清單
         let assets = JSON.parse(localStorage.getItem('asset_list')) || defaultAssets;
         if (!localStorage.getItem('asset_list')) {
             localStorage.setItem('asset_list', JSON.stringify(assets));
         }
 
+        // 頁面初始化載入
         window.onload = function() {
             loadWorkerUrl();
             renderAssets();
         };
 
+        // 核心功能：動態渲染資產卡片列表
         function renderAssets() {
             const container = document.getElementById('assetContainer');
             container.innerHTML = '';
@@ -150,6 +158,7 @@
             });
         }
 
+        // 功能 1：修復新增資產配置
         function openAddModal() {
             document.getElementById('addModal').classList.remove('hidden');
             document.getElementById('addModal').classList.add('flex');
@@ -176,6 +185,7 @@
             closeAddModal();
         }
 
+        // 功能 2：無痕刪除資產紀錄
         function deleteAsset(index) {
             if (confirm(`確定要刪除「${assets[index].name}」的管理配置嗎？`)) {
                 assets.splice(index, 1);
@@ -184,9 +194,10 @@
             }
         }
 
+        // 功能 3：上下編輯移動排序
         function moveAsset(index, direction) {
             const targetIndex = index + direction;
-            if (targetIndex < 0 || targetIndex >= assets.length) return;
+            if (targetIndex < 0 || targetIndex >= assets.length) return; // 越界直接攔截
 
             const temp = assets[index];
             assets[index] = assets[targetIndex];
@@ -196,6 +207,7 @@
             renderAssets();
         }
 
+        // Worker 網址本端記憶儲存與讀取
         function saveWorkerUrl() {
             const url = document.getElementById('workerUrlInput').value.trim();
             localStorage.setItem('worker_url', url);
@@ -205,10 +217,11 @@
             document.getElementById('workerUrlInput').value = url;
         }
 
-        // 核心功能：並行抓取報價（已修復雙問號 Bug）
+        // 核心功能：並行抓取報價與優雅狀態提示（已移除舊版多餘彈窗）
         async function updateAllOnlinePrices() {
             let workerUrl = document.getElementById('workerUrlInput').value.trim();
             if (!workerUrl) {
+                // 如果是空的，嘗試去抓 placeholder
                 workerUrl = document.getElementById('workerUrlInput').placeholder;
             }
 
@@ -221,14 +234,13 @@
 
             const now = new Date();
             const timeStr = now.toLocaleTimeString('zh-TW', { hour12: true });
+
+            // 構造清洗與並行 Fetch 請求
             const cleanBaseUrl = workerUrl.endsWith('/') ? workerUrl.slice(0, -1) : workerUrl;
 
             const promises = assets.map(async (asset) => {
                 try {
-                    // ✨【關鍵修復】：動態偵測原網址是否包含問號，完美兼容密鑰鎖防線
-                    const separator = cleanBaseUrl.includes('?') ? '&' : '?';
-                    const finalRequestUrl = `${cleanBaseUrl}${separator}isin=${asset.isin}&type=${asset.type}`;
-                    
+                    const finalRequestUrl = `${cleanBaseUrl}?isin=${asset.isin}&type=${asset.type}`;
                     const response = await fetch(finalRequestUrl);
                     if (!response.ok) throw new Error();
                     
@@ -246,6 +258,7 @@
 
             await Promise.all(promises);
 
+            // ✨ 極簡流暢的動態文字提示，取代原本打斷體驗的彈窗詢問
             btnText.innerText = "✨ 更新成功！";
             btnIcon.innerText = "✅";
             setTimeout(() => {
@@ -254,6 +267,7 @@
             }, 2000);
         }
 
+        // 獨立功能：打包分享導出 CSV
         function exportAndShareCSV() {
             let csvContent = "資產名稱,ISIN識別碼,資產類別,最新報價,更新時間\n";
             assets.forEach(asset => {
@@ -266,6 +280,7 @@
             const dateString = new Date().toISOString().slice(0, 10);
             const fileName = `AssetReport_${dateString}.csv`;
 
+            // 如果行動端設備支援原生分享協議
             if (navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, {type: 'text/csv'})] })) {
                 const file = new File([blob], fileName, { type: 'text/csv' });
                 navigator.share({
