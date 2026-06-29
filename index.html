@@ -14,7 +14,6 @@
         body { font-family: 'Microsoft JhengHei', -apple-system, BlinkMacSystemFont, sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* 隱藏預設數字輸入框的上下箭頭 */
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
@@ -24,7 +23,7 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">AssetTracker V6</h1>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">AssetTracker V6.1</h1>
                 <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Private Wealth Edge Dashboard</p>
             </div>
             <div class="flex space-x-2">
@@ -47,7 +46,7 @@
     <main class="flex-1 max-w-md w-full mx-auto px-4 py-4 overflow-y-auto no-scrollbar">
         
         <div class="mb-5 space-y-3">
-            <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev?key=YOUR_KEY" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-amber-500 transition-colors" title="Cloudflare Worker 網址">
+            <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev?key=YOUR_KEY" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-amber-500 transition-colors">
             
             <button id="updateBtn" onclick="updateEngine()" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
                 <span id="btnIcon">🔄</span>
@@ -141,7 +140,8 @@
     <div id="holdingModal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-5 shadow-2xl">
             <h3 id="hModalTitle" class="text-base font-bold text-slate-100 mb-4 border-b border-slate-800 pb-2">開設資產子帳戶</h3>
-            <input type="hidden" id="hId"> <div class="space-y-3">
+            <input type="hidden" id="hId"> 
+            <div class="space-y-3">
                 <div>
                     <label class="text-[10px] text-slate-400">關聯標的 (ISIN)</label>
                     <select id="hIsin" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm mt-1"></select>
@@ -178,24 +178,20 @@
     </div>
 
     <script>
-        // --- 資料庫 (Local Storage) ---
         let dbMaster = JSON.parse(localStorage.getItem('v6_isin_master')) || [];
         let dbHoldings = JSON.parse(localStorage.getItem('v6_asset_holdings')) || [];
         
-        // 運行時記憶體
-        let livePrices = {}; // { 'US9128...': { price: 98.5, time: '10:00' } }
-        let fxRates = {};    // { 'USD': 0.128 } (1 HKD = 0.128 USD) -> 1 USD = 7.81 HKD
-        let myCharts = {};   // 儲存圖表實例
+        let livePrices = {}; 
+        let fxRates = {};    
+        let myCharts = {};   
 
-        // 初始化
         window.onload = function() {
             loadWorkerUrl();
-            if(dbMaster.length === 0) seedDefaultData(); // 首次使用塞入預設
+            if(dbMaster.length === 0) seedDefaultData(); 
             switchTab('overview');
             renderAll();
         };
 
-        // --- 核心邏輯：雙引擎啟動 (抓報價 + 抓匯率) ---
         async function updateEngine() {
             if(dbMaster.length === 0) return alert('請先設定 ISIN 主檔！');
             
@@ -205,12 +201,8 @@
             btnIcon.innerText = "⚡";
 
             try {
-                // 1. 並行獲取報價與匯率
                 await Promise.all([ fetchPrices(), fetchFXRates() ]);
-                
-                // 2. 重新渲染全局畫面與計算
                 renderAll();
-
                 btnText.innerText = "✨ 結算完成！";
                 btnIcon.innerText = "✅";
             } catch (err) {
@@ -225,7 +217,6 @@
             }, 2000);
         }
 
-        // 引擎 A: Cloudflare Worker 報價
         async function fetchPrices() {
             let workerUrl = document.getElementById('workerUrlInput').value.trim() || document.getElementById('workerUrlInput').placeholder;
             const cleanUrl = workerUrl.endsWith('/') ? workerUrl.slice(0, -1) : workerUrl;
@@ -249,20 +240,18 @@
             await Promise.all(promises);
         }
 
-        // 引擎 B: 全球匯率 API (以 HKD 為 Base)
         async function fetchFXRates() {
             try {
                 const res = await fetch('https://open.er-api.com/v6/latest/HKD');
                 const data = await res.json();
-                fxRates = data.rates; // 包含 USD, GBP...
-                fxRates['HKD'] = 1;   // 防呆
+                fxRates = data.rates; 
+                fxRates['HKD'] = 1;   
                 document.getElementById('lastSyncTime').innerText = `HKD 匯率基準同步於: ${new Date().toLocaleTimeString('zh-TW', {hour12:false})}`;
             } catch (e) {
                 console.error("匯率抓取失敗", e);
             }
         }
 
-        // --- 核心計算與渲染器 ---
         function renderAll() {
             renderMaster();
             renderHoldings();
@@ -272,34 +261,31 @@
         function calculateAndRenderOverview() {
             let grandTotalMkt = 0;
             let grandTotalCost = 0;
-            let bucketMap = {}; // { 'WL': { mkt: 0, pnl: 0 } }
-            let isinMap = {};   // { 'US9...': { mkt: 0, pnl: 0, name: '' } }
+            let bucketMap = {}; 
+            let isinMap = {};   
 
             dbHoldings.forEach(h => {
-                const mInfo = dbMaster.find(m => m.isin === h.isin) || { name: '未知' };
+                const mInfo = dbMaster.find(m => m.isin === h.isin) || { name: '未知', type: 'fund' };
                 const cPrice = livePrices[h.isin]?.price || 0;
-                
-                // 匯率換算邏輯 (外幣 -> HKD)
-                // API 回傳格式為 1 HKD = X 外幣。所以 HKD價值 = 外幣價值 / X
                 const rate = fxRates[h.currency] || 1; 
                 
-                const mktValueFCY = cPrice * h.qty;
-                const costFCY = h.avgPrice * h.qty;
+                // ✨ 修復 2：針對 Bond 債券，市場現價與平均買入價均需乘上 0.01 (除以 100)
+                const multiplier = (mInfo.type === 'bond') ? 0.01 : 1;
+                
+                const mktValueFCY = cPrice * multiplier * h.qty;
+                const costFCY = h.avgPrice * multiplier * h.qty;
                 
                 const mktValueHKD = mktValueFCY / rate;
                 const costHKD = costFCY / rate;
                 const pnlHKD = mktValueHKD - costHKD;
 
-                // 累加總計
                 grandTotalMkt += mktValueHKD;
                 grandTotalCost += costHKD;
 
-                // 累加 Bucket 維度
                 if(!bucketMap[h.bucket]) bucketMap[h.bucket] = { mkt: 0, pnl: 0 };
                 bucketMap[h.bucket].mkt += mktValueHKD;
                 bucketMap[h.bucket].pnl += pnlHKD;
 
-                // 累加 ISIN 維度
                 if(!isinMap[h.isin]) isinMap[h.isin] = { mkt: 0, pnl: 0, name: mInfo.name };
                 isinMap[h.isin].mkt += mktValueHKD;
                 isinMap[h.isin].pnl += pnlHKD;
@@ -307,14 +293,12 @@
 
             const grandPnl = grandTotalMkt - grandTotalCost;
 
-            // 渲染頂部 Grand Total
             document.getElementById('grandTotalValue').innerText = `$${formatNum(grandTotalMkt)}`;
             document.getElementById('grandTotalCost').innerText = `$${formatNum(grandTotalCost)}`;
             const pnlEl = document.getElementById('grandTotalPnL');
             pnlEl.innerText = (grandPnl >= 0 ? '+' : '') + `$${formatNum(grandPnl)}`;
             pnlEl.className = `text-base font-mono font-bold ${grandPnl >= 0 ? 'text-emerald-400' : 'text-rose-500'}`;
 
-            // 渲染列表 (Bucket)
             const bCont = document.getElementById('bucketSummaryContainer');
             bCont.innerHTML = '';
             const bLabels = [], bData = [];
@@ -323,15 +307,14 @@
                 bCont.innerHTML += createSummaryRow(`[${b}]`, bucketMap[b].mkt, bucketMap[b].pnl);
             });
 
-            // 渲染列表 (ISIN)
             const iCont = document.getElementById('isinSummaryContainer');
             iCont.innerHTML = '';
             const iLabels = [], iData = [], iColors = [];
             Object.keys(isinMap).forEach(i => {
                 const pnl = isinMap[i].pnl;
-                iLabels.push(i.slice(-4)); // 只顯示末4碼圖表會比較乾淨
+                iLabels.push(i.slice(-4)); 
                 iData.push(pnl);
-                iColors.push(pnl >= 0 ? '#34d399' : '#fb7185'); // Emerald vs Rose
+                iColors.push(pnl >= 0 ? '#34d399' : '#fb7185'); 
                 iCont.innerHTML += createSummaryRow(isinMap[i].name, isinMap[i].mkt, pnl, i);
             });
 
@@ -340,11 +323,9 @@
                 iCont.innerHTML = '<p class="text-xs text-slate-500">尚無部位資料</p>';
             }
 
-            // 更新 Chart.js 圖表
             updateCharts(bLabels, bData, iLabels, iData, iColors);
         }
 
-        // 小工具：生成總結行 HTML
         function createSummaryRow(title, mkt, pnl, subtitle='') {
             const pColor = pnl >= 0 ? 'text-emerald-400' : 'text-rose-500';
             const pSign = pnl >= 0 ? '+' : '';
@@ -361,7 +342,6 @@
             </div>`;
         }
 
-        // Chart.js 渲染器
         function updateCharts(bLabels, bData, iLabels, iData, iColors) {
             Chart.defaults.color = '#94a3b8';
             Chart.defaults.font.family = "monospace";
@@ -397,8 +377,6 @@
             });
         }
 
-
-        // --- CRUD 管理: 資產子帳戶 (Holdings) ---
         function renderHoldings() {
             const cont = document.getElementById('holdingsContainer');
             cont.innerHTML = '';
@@ -419,7 +397,7 @@
                             <p class="text-[10px] text-slate-500 font-mono mt-0.5">${h.isin}</p>
                         </div>
                         <div class="flex space-x-1">
-                            <button onclick="editHolding('${h.id}')" class="p-1.5 text-slate-400 hover:text-blue-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                            <button onclick="openHoldingModal('${h.id}')" class="p-1.5 text-slate-400 hover:text-blue-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
                             <button onclick="delHolding('${h.id}')" class="p-1.5 text-slate-400 hover:text-red-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                     </div>
@@ -441,8 +419,8 @@
                 document.getElementById('hModalTitle').innerText = '編輯資產子帳戶';
                 const h = dbHoldings.find(x => x.id === id);
                 document.getElementById('hId').value = h.id;
-                hIsinSel.value = h.isin; hIsinSel.disabled = true; // 編輯時不准換標的
-                document.getElementById('hBucket').value = h.bucket; document.getElementById('hBucket').disabled = true; // 不准換Bucket
+                hIsinSel.value = h.isin; hIsinSel.disabled = true; 
+                document.getElementById('hBucket').value = h.bucket; document.getElementById('hBucket').disabled = true; 
                 document.getElementById('hCurrency').value = h.currency;
                 document.getElementById('hQty').value = h.qty;
                 document.getElementById('hAvgPrice').value = h.avgPrice;
@@ -468,11 +446,9 @@
             if(isNaN(avg) || avg < 0) return alert("平均買入價不可空白且必須 ≥ 0");
 
             if (!id) {
-                // Rule 4: 複合主鍵防呆 (新增時檢查)
                 if(dbHoldings.find(h => h.bucket === bucket && h.isin === isin)) {
                     return alert(`該 Bucket [${bucket}] 中已存在相同的 ISIN，請直接編輯該筆部位即可！`);
                 }
-                // 產生 Unique 帳號 (Rule 1)
                 dbHoldings.push({ id: `pos_${Date.now()}`, isin, bucket, currency, qty, avgPrice: avg });
             } else {
                 const idx = dbHoldings.findIndex(x => x.id === id);
@@ -491,8 +467,6 @@
             }
         }
 
-
-        // --- CRUD 管理: ISIN 主檔 (Master) ---
         function renderMaster() {
             const cont = document.getElementById('masterContainer');
             cont.innerHTML = '';
@@ -528,7 +502,6 @@
         }
 
         function delMaster(isin) {
-            // 檢查是否被 Holdings 綁定
             if(dbHoldings.find(h => h.isin === isin)) return alert("無法刪除！因為在「資產子帳戶」中仍有部位綁定此標的。請先清空部位。");
             if(confirm('確定刪除此 ISIN 主檔？')) {
                 dbMaster = dbMaster.filter(m => m.isin !== isin);
@@ -537,7 +510,6 @@
             }
         }
 
-        // --- 專家級：雙軌導出防護機制 ---
         function exportPublicCSV() {
             let csv = "資產名稱,ISIN,類別,最新報價,更新時間\n";
             dbMaster.forEach(m => {
@@ -548,20 +520,23 @@
         }
 
         function exportPrivateCSV() {
-            // 🛑 防禦機制 1：紅色警告
             if(!confirm("⚠️ 嚴重警告！\n此導出報表包含您真實的財富總值、持有數量與浮盈虧等高度私密資訊。\n\n為了安全，系統將自動封鎖社交分享面板，僅允許儲存於本機。確定要導出嗎？")) return;
             
             let csv = "Bucket,子帳戶 ID,關聯標的(ISIN),資產名稱,結算幣別,持有數量,平均買入價(外幣),現價(外幣),帳戶市值(HKD),帳戶浮盈虧(HKD)\n";
             dbHoldings.forEach(h => {
-                const mInfo = dbMaster.find(m => m.isin === h.isin) || { name: '未知' };
+                const mInfo = dbMaster.find(m => m.isin === h.isin) || { name: '未知', type: 'fund' };
                 const cPrice = livePrices[h.isin]?.price || 0;
                 const rate = fxRates[h.currency] || 1;
-                const mktHKD = (cPrice * h.qty) / rate;
-                const pnlHKD = mktHKD - ((h.avgPrice * h.qty) / rate);
+                
+                // ✨ 修復 2：私密 CSV 導出的數學計算同樣套用 Bond 的 0.01 乘數
+                const multiplier = (mInfo.type === 'bond') ? 0.01 : 1;
+                
+                const mktHKD = (cPrice * multiplier * h.qty) / rate;
+                const costHKD = (h.avgPrice * multiplier * h.qty) / rate;
+                const pnlHKD = mktHKD - costHKD;
                 
                 csv += `"${h.bucket}","${h.id}","${h.isin}","${mInfo.name}","${h.currency}",${h.qty},${h.avgPrice},${cPrice},${mktHKD.toFixed(2)},${pnlHKD.toFixed(2)}\n`;
             });
-            // 🛑 防禦機制 2：強制只用 Download
             triggerShareOrDownload(csv, 'AssetTracker_PRIVATE_LEDGER', false);
         }
 
@@ -583,7 +558,6 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // --- 雜項輔助函數 ---
         function switchTab(tabId) {
             ['overview', 'holdings', 'master'].forEach(id => {
                 document.getElementById(`tab-${id}`).classList.add('hidden');
