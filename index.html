@@ -21,7 +21,7 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col pb-safe">
 
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
-        <div class="max-w-md mx-auto flex justify-between items-center">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">AssetTracker V7.0</h1>
                 <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Wealth & Cashflow Engine</p>
@@ -36,23 +36,26 @@
             </div>
         </div>
         
-        <div class="max-w-md mx-auto mt-3 flex bg-slate-950 rounded-xl p-1 border border-slate-800">
+        <div class="max-w-xl mx-auto mt-3 flex bg-slate-950 rounded-xl p-1 border border-slate-800">
             <button onclick="switchTab('overview')" id="tab-btn-overview" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-emerald-400 shadow transition-all">📊 總覽與圖表</button>
             <button onclick="switchTab('holdings')" id="tab-btn-holdings" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all">💼 資產帳戶</button>
             <button onclick="switchTab('master')" id="tab-btn-master" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all">⚙️ ISIN 報價</button>
         </div>
     </header>
 
-    <main class="flex-1 max-w-md w-full mx-auto px-4 py-4 overflow-y-auto no-scrollbar">
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-4 overflow-y-auto no-scrollbar">
         
-        <div class="mb-5 space-y-3">
-            <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev?key=YOUR_KEY" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-emerald-500 transition-colors">
-            
-            <button id="updateBtn" onclick="updateEngine()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
-                <span id="btnIcon">🔄</span>
-                <span id="btnText">全維度數據與現金流打撈</span>
-            </button>
-            <div class="text-center text-[10px] text-slate-500 font-mono" id="lastSyncTime">系統待命，尚未進行同步。</div>
+        <div class="mb-5 p-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+            <div class="md:col-span-2">
+                <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev?key=YOUR_KEY" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-emerald-500 transition-colors">
+            </div>
+            <div class="flex flex-col space-y-1">
+                <button id="updateBtn" onclick="updateEngine()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2 text-xs">
+                    <span id="btnIcon">🔄</span>
+                    <span id="btnText">全維度數據與現金流打撈</span>
+                </button>
+                <div class="text-center text-[10px] text-slate-500 font-mono" id="lastSyncTime">系統待命，尚未進行同步。</div>
+            </div>
         </div>
 
         <div id="tab-overview" class="space-y-6">
@@ -76,48 +79,54 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg flex flex-col items-center">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col items-center">
                     <h3 class="text-[10px] text-slate-400 font-bold uppercase mb-2 w-full text-center">Bucket 佔比</h3>
-                    <div class="w-full relative aspect-square">
+                    <div class="w-full relative aspect-square max-h-[220px]">
                         <canvas id="bucketChart"></canvas>
                     </div>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg flex flex-col items-center">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col items-center">
                     <h3 class="text-[10px] text-slate-400 font-bold uppercase mb-2 w-full text-center">ISIN 浮盈虧排行</h3>
-                    <div class="w-full relative min-h-[150px] flex-1">
+                    <div class="w-full relative min-h-[180px] max-h-[220px] flex-1">
                         <canvas id="pnlChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div>
-                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-amber-500 pl-2">Bucket 維度統計</h3>
-                <div id="bucketSummaryContainer" class="space-y-2"></div>
-            </div>
-            <div class="pb-6">
-                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-emerald-500 pl-2">ISIN 維度統計</h3>
-                <div id="isinSummaryContainer" class="space-y-2"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
+                <div>
+                    <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-amber-500 pl-2">Bucket 維度統計</h3>
+                    <div id="bucketSummaryContainer" class="space-y-2"></div>
+                </div>
+                <div>
+                    <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-emerald-500 pl-2">ISIN 維度統計</h3>
+                    <div id="isinSummaryContainer" class="space-y-2"></div>
+                </div>
             </div>
         </div>
 
         <div id="tab-holdings" class="hidden space-y-4 pb-6">
-            <button onclick="openHoldingModal()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>開設資產子帳戶</span>
-            </button>
-            <div id="holdingsContainer" class="space-y-3 mt-4"></div>
+            <div class="flex justify-center">
+                <button onclick="openHoldingModal()" class="w-full md:w-auto md:px-8 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>開設資產子帳戶</span>
+                </button>
+            </div>
+            <div id="holdingsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
         </div>
 
         <div id="tab-master" class="hidden space-y-4 pb-6">
-            <button onclick="openMasterModal()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>新增 ISIN 標的</span>
-            </button>
-            <div id="masterContainer" class="space-y-3 mt-4"></div>
+            <div class="flex justify-center">
+                <button onclick="openMasterModal()" class="w-full md:w-auto md:px-8 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>新增 ISIN 標的</span>
+                </button>
+            </div>
+            <div id="masterContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"></div>
 
-            <div class="mt-8 border-t border-slate-800 pt-6">
-                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-cyan-500 pl-2">系統備份與還原 (JSON)</h3>
+            <div class="mt-8 border-t border-slate-800 pt-6 max-w-xl mx-auto w-full">
+                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-cyan-500 pl-2 text-center md:text-left">系統備份與還原 (JSON)</h3>
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="backupJSON()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2 text-sm">
                         <span>📥 備份</span>
@@ -194,7 +203,7 @@
         let dbMaster = JSON.parse(localStorage.getItem('v6_isin_master')) || [];
         let dbHoldings = JSON.parse(localStorage.getItem('v6_asset_holdings')) || [];
         
-        let liveData = {}; // 升級：包含 price, dividendRate, ytdReturn
+        let liveData = {}; 
         let fxRates = {};    
         let myCharts = {};   
 
@@ -393,30 +402,31 @@
                 }
 
                 cont.innerHTML += `
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow relative overflow-hidden">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex flex-col"><div class="flex items-center space-x-2"><span class="bg-amber-900/40 text-amber-500 font-bold px-1.5 py-0.5 rounded text-[10px] border border-amber-700/50">${h.bucket}</span><span class="text-sm font-bold text-slate-200">${h.mInfo.name}</span></div><p class="text-[10px] text-slate-500 font-mono mt-0.5 ml-1">${h.isin}</p></div>
-                        <div class="flex space-x-1 flex-shrink-0">
-                            <button onclick="openHoldingModal('${h.id}')" class="p-1.5 text-slate-400 hover:text-blue-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
-                            <button onclick="delHolding('${h.id}')" class="p-1.5 text-slate-400 hover:text-red-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex flex-col"><div class="flex items-center space-x-2"><span class="bg-amber-900/40 text-amber-500 font-bold px-1.5 py-0.5 rounded text-[10px] border border-amber-700/50">${h.bucket}</span><span class="text-sm font-bold text-slate-200">${h.mInfo.name}</span></div><p class="text-[10px] text-slate-500 font-mono mt-0.5 ml-1">${h.isin}</p></div>
+                            <div class="flex space-x-1 flex-shrink-0">
+                                <button onclick="openHoldingModal('${h.id}')" class="p-1.5 text-slate-400 hover:text-blue-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                                <button onclick="delHolding('${h.id}')" class="p-1.5 text-slate-400 hover:text-red-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-950 p-2 rounded-t-lg border border-slate-800/50 border-b-0">
-                        <div class="text-left"><p class="text-slate-500">均價 (${h.currency})</p><p class="font-mono text-slate-300">${h.avgPrice.toFixed(4)}</p></div>
-                        <div class="text-center border-x border-slate-800/50 px-1"><p class="text-slate-500">現價 (${h.currency})</p><p class="font-mono font-bold text-slate-200">${displayPrice}</p></div>
-                        <div class="text-right"><p class="text-slate-500">數量</p><p class="font-mono text-slate-300 font-bold">${h.qty}</p></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-800/40 p-2 rounded-b-lg border border-slate-800/50 ${extraPanel ? 'rounded-b-none border-b-0' : ''}">
-                        <div class="text-left"><p class="text-slate-500">成本 (HKD)</p><p class="font-mono text-slate-400">$${formatNum(h.costHKD)}</p></div>
-                        <div class="text-center border-x border-slate-700/50 px-1"><p class="text-slate-500">市值 (HKD)</p><p class="font-mono text-slate-100">$${formatNum(h.mktHKD)}</p></div>
-                        <div class="text-right"><p class="text-slate-500">浮盈/虧</p><p class="font-mono font-bold ${pnlColor}">${h.pnlHKD>=0?'+':''}$${formatNum(h.pnlHKD)}</p></div>
+                        <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-950 p-2 rounded-t-lg border border-slate-800/50 border-b-0">
+                            <div class="text-left"><p class="text-slate-500">均價 (${h.currency})</p><p class="font-mono text-slate-300">${h.avgPrice.toFixed(4)}</p></div>
+                            <div class="text-center border-x border-slate-800/50 px-1"><p class="text-slate-500">現價 (${h.currency})</p><p class="font-mono font-bold text-slate-200">${displayPrice}</p></div>
+                            <div class="text-right"><p class="text-slate-500">數量</p><p class="font-mono text-slate-300 font-bold">${h.qty}</p></div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-800/40 p-2 rounded-b-lg border border-slate-800/50 ${extraPanel ? 'rounded-b-none border-b-0' : ''}">
+                            <div class="text-left"><p class="text-slate-500">成本 (HKD)</p><p class="font-mono text-slate-400">$${formatNum(h.costHKD)}</p></div>
+                            <div class="text-center border-x border-slate-700/50 px-1"><p class="text-slate-500">市值 (HKD)</p><p class="font-mono text-slate-100">$${formatNum(h.mktHKD)}</p></div>
+                            <div class="text-right"><p class="text-slate-500">浮盈/虧</p><p class="font-mono font-bold ${pnlColor}">${h.pnlHKD>=0?'+':''}$${formatNum(h.pnlHKD)}</p></div>
+                        </div>
                     </div>
                     ${extraPanel}
                 </div>`;
             });
         }
 
-        /* ---------------- 以下為展開的 Modal、CSV 及輔助函數 ---------------- */
         function openHoldingModal(id = null) {
             const hIsinSel = document.getElementById('hIsin');
             hIsinSel.innerHTML = dbMaster.map(m => `<option value="${m.isin}">${m.isin} - ${m.name}</option>`).join('');
