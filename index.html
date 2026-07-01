@@ -23,8 +23,8 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">AssetTracker V7.6β</h1>
-                <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Pre-GoLive先頭部隊</p>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">AssetTracker V8.0</h1>
+                <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Phase 1 債券爬蟲測試版</p>
             </div>
             <div class="flex space-x-2">
                 <button onclick="exportPublicCSV()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors" title="分享公開報價">
@@ -50,7 +50,7 @@
             
             <button id="updateBtn" onclick="updateEngine()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
                 <span id="btnIcon">🔄</span>
-                <span id="btnText">全維度數據與現金流打撈</span>
+                <span id="btnText">啟動 URL 爬蟲打撈</span>
             </button>
             <div class="text-center text-[10px] text-slate-500 font-mono" id="lastSyncTime">系統待命，尚未進行同步。</div>
         </div>
@@ -213,7 +213,7 @@
 
         window.onload = function() {
             loadWorkerUrl();
-            // ✨ V7.6 資料洗車機自動執行，補齊 sourceUrl 屬性
+            // 自動補齊 sourceUrl 屬性 (洗車機)
             dbMaster = dbMaster.map(m => ({ ...m, sourceUrl: m.sourceUrl || '' }));
             localStorage.setItem('v6_isin_master', JSON.stringify(dbMaster));
 
@@ -227,7 +227,7 @@
             if(dbMaster.length === 0) return alert('請先設定 ISIN 主檔！');
             const btnText = document.getElementById('btnText');
             const btnIcon = document.getElementById('btnIcon');
-            btnText.innerText = "打撈報價與派息中...";
+            btnText.innerText = "爬蟲打撈中...";
             btnIcon.innerText = "⚡";
 
             try {
@@ -239,7 +239,7 @@
                 btnText.innerText = "⚠️ 部分網路異常";
                 btnIcon.innerText = "❌";
             }
-            setTimeout(() => { btnText.innerText = "全維度數據與現金流打撈"; btnIcon.innerText = "🔄"; }, 2000);
+            setTimeout(() => { btnText.innerText = "啟動 URL 爬蟲打撈"; btnIcon.innerText = "🔄"; }, 2000);
         }
 
         async function fetchPrices() {
@@ -249,7 +249,10 @@
 
             const promises = dbMaster.map(async (m) => {
                 try {
-                    const res = await fetch(`${cleanUrl}${sep}isin=${m.isin}&type=${m.type}`);
+                    // 🎯 V8.0 核心升級：將 Source URL 進行編碼並傳遞給 Worker 大腦
+                    const encodedUrl = encodeURIComponent(m.sourceUrl || '');
+                    const res = await fetch(`${cleanUrl}${sep}isin=${m.isin}&type=${m.type}&url=${encodedUrl}`);
+                    
                     if (!res.ok) throw new Error();
                     const data = await res.json();
                     if (data.status === 'success') {
@@ -491,7 +494,6 @@
             }
         }
 
-        // ✨ V7.6 重頭戲：ISIN主檔卡片新增「編輯 ✏️」按鈕，且核心主鍵防呆鎖定
         function renderMaster() {
             const cont = document.getElementById('masterContainer');
             cont.innerHTML = '';
@@ -523,7 +525,7 @@
                     </div>
                     <div class="text-[10px] bg-slate-950 p-1.5 rounded font-mono text-slate-400 truncate border border-slate-800/60 flex items-center">
                         <span class="text-amber-500 mr-1 flex-shrink-0">🔗 URL:</span>
-                        <span class="truncate">${m.sourceUrl || '未設定 (預設執行 API 智慧打撈)'}</span>
+                        <span class="truncate">${m.sourceUrl || '未設定'}</span>
                     </div>
                 </div>`;
             });
@@ -534,15 +536,13 @@
             const typeSelect = document.getElementById('mType');
             
             if (isin) {
-                // 進入「編輯」模式
                 document.getElementById('mModalTitle').innerText = '✏️ 編輯 ISIN 主檔';
                 const m = dbMaster.find(x => x.isin === isin);
-                isinInput.value = m.isin; isinInput.disabled = true; // 🎯 防呆：鎖定核心主鍵
-                typeSelect.value = m.type; typeSelect.disabled = true; // 類別同步鎖定
+                isinInput.value = m.isin; isinInput.disabled = true;
+                typeSelect.value = m.type; typeSelect.disabled = true; 
                 document.getElementById('mName').value = m.name;
                 document.getElementById('mSourceUrl').value = m.sourceUrl || '';
             } else {
-                // 進入「新增」模式
                 document.getElementById('mModalTitle').innerText = '➕ 新增 ISIN 標的';
                 isinInput.value = ''; isinInput.disabled = false;
                 typeSelect.value = 'mutualfund'; typeSelect.disabled = false;
@@ -562,12 +562,10 @@
             if(!isin || !name) return alert("請完整填寫 ISIN 與資產名稱！");
 
             if (isinInput.disabled) {
-                // 🎯 編輯儲存邏輯
                 const idx = dbMaster.findIndex(m => m.isin === isin);
                 dbMaster[idx].name = name;
                 dbMaster[idx].sourceUrl = sourceUrl;
             } else {
-                // 🎯 新增儲存邏輯
                 if(dbMaster.find(m => m.isin === isin)) return alert("該 ISIN 已存在於主檔中！");
                 dbMaster.push({ isin, type, name, sourceUrl });
             }
@@ -588,7 +586,7 @@
         function backupJSON() {
             const data = { schema_version: "1.1", export_date: new Date().toISOString(), master: dbMaster, holdings: dbHoldings };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            forceDownload(blob, `AssetTracker_V7.6_Backup_${new Date().toISOString().slice(0, 10)}.json`);
+            forceDownload(blob, `AssetTracker_V8.0_Phase1_${new Date().toISOString().slice(0, 10)}.json`);
         }
 
         function restoreJSON(event) {
@@ -600,12 +598,8 @@
                     const data = JSON.parse(e.target.result);
                     if (!data.master || !data.holdings) throw new Error("檔案缺少核心資料表");
 
-                    // 🎯 V7.6 智慧還原洗車機：自動幫歷史 JSON 補足 sourceUrl 屬性，防崩潰
                     dbMaster = data.master.map(m => ({ 
-                        isin: m.isin || '', 
-                        type: m.type || 'mutualfund', 
-                        name: m.name || '未命名',
-                        sourceUrl: m.sourceUrl || '' 
+                        isin: m.isin || '', type: m.type || 'mutualfund', name: m.name || '未命名', sourceUrl: m.sourceUrl || '' 
                     }));
                     
                     dbHoldings = data.holdings.map(h => ({
@@ -618,7 +612,7 @@
                     
                     document.getElementById('restoreInput').value = ''; 
                     renderAll();
-                    alert(`✅ 系統洗車還原成功！\n共載入 ${dbMaster.length} 筆主檔與 ${dbHoldings.length} 筆子帳戶。`);
+                    alert(`✅ 系統洗車還原成功！`);
                 } catch (err) { alert("❌ 還原失敗：JSON 格式損毀或不相容。"); }
             };
             reader.readAsText(file);
@@ -683,7 +677,7 @@
         
         function seedDefaultData() {
             dbMaster = [
-                { isin: 'US912810UB25', type: 'bond', name: '美元國債 2044', sourceUrl: 'https://tw.tradingview.com/symbols/OTCB-912810UB2/' },
+                { isin: 'US912810UB25', type: 'bond', name: '美元國債 2044', sourceUrl: 'https://tw.tradingview.com/symbols/EUROTLX-US912810UB25/' },
                 { isin: 'IE0004WJOWO1', type: 'mutualfund', name: 'PIMCO收益基金港元派息', sourceUrl: 'https://www.pimco.com/hk/zh/investments/gis/pimco-balanced-income-and-growth-fund/mretl-hkd-unhedged-income-ii' }
             ];
             dbHoldings = [
