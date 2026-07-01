@@ -28,7 +28,7 @@
             </div>
             <div class="flex space-x-2">
                 <button onclick="exportPublicCSV()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors" title="分享公開報價">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
                 </button>
                 <button onclick="exportPrivateCSV()" class="p-2 bg-red-900/80 hover:bg-red-800 text-red-200 rounded-xl transition-colors shadow-lg shadow-red-900/20" title="私密帳本本地導出">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
@@ -71,7 +71,7 @@
                     </div>
                 </div>
                 <div class="mt-3 bg-emerald-950/40 border border-emerald-800/50 rounded-lg p-2 flex justify-between items-center">
-                    <span class="text-[10px] text-emerald-400 font-bold tracking-widest">💰 預估年回報/配息收入 (HKD)</span>
+                    <span class="text-[10px] text-emerald-400 font-bold tracking-widest">💰 預估年配息被動收入 (HKD)</span>
                     <span class="text-sm font-mono font-bold text-emerald-300" id="grandTotalIncome">$0.00</span>
                 </div>
             </div>
@@ -166,7 +166,7 @@
                         <input type="text" id="mIntVal" placeholder="如: 0.073 或 6.45%" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900 transition-all">
                     </div>
                 </div>
-                <p class="text-[8px] text-slate-500 leading-tight">ℹ️ 債券將鎖定框線並跟隨 URL；共同基金可輸入「數值」或「%」。</p>
+                <p class="text-[8px] text-slate-500 leading-tight">ℹ️ 若無輸入派息頻率，系統將判定為累積型基金，其收益不計入現金流總收入。</p>
 
             </div>
             <div class="grid grid-cols-2 gap-3 mt-6">
@@ -226,7 +226,6 @@
 
         window.onload = function() {
             loadWorkerUrl();
-            // 自動補齊屬性 (洗車機)
             dbMaster = dbMaster.map(m => ({ 
                 ...m, 
                 sourceUrl: m.sourceUrl || '', 
@@ -300,7 +299,7 @@
             calculateAndRenderOverview(); 
         }
 
-        // 🎯 核心升級：精準結算引擎 (結合機器抓取與人為輸入)
+        // 🎯 核心升級：精準結算引擎 (派息綠色加總 vs 累積藍色不加)
         function calculateAndRenderOverview() {
             let grandTotalMkt = 0; let grandTotalCost = 0; let grandTotalIncome = 0;
             let bucketMap = {}; let isinMap = {};   
@@ -318,23 +317,26 @@
                 let incomeHKD = 0;
 
                 if (mInfo.type === 'bond') {
-                    // 規則 1: 債券完全吃 Worker 爬蟲帶回來的 divRate
+                    // 公債：自動從 Worker 帶回來的息率計算，計入總現金流
                     if (ld.divRate > 0) {
                         incomeHKD = (100 * multiplier * h.qty * ld.divRate) / rate; 
                     }
                 } else {
-                    // 規則 2 & 3: 共同基金吃手動輸入的 intVal 與 intFreq
+                    // 共同基金：依賴派息頻率判斷
                     let valStr = mInfo.intVal || "0";
-                    if (valStr.includes('%')) {
-                        // 包含 % (如 6.45%): Quantity x 市場價格 x 輸入值%
-                        let pct = parseFloat(valStr.replace('%', '')) / 100;
-                        if (!isNaN(pct)) incomeHKD = (h.qty * ld.price * pct) / rate;
-                    } else {
-                        // 不含 % (如 0.073): Quantity x Interest Value x Interest Frequency
-                        let amt = parseFloat(valStr);
-                        let freq = parseInt(mInfo.intFreq) || 0;
-                        if (!isNaN(amt) && freq > 0) incomeHKD = (h.qty * amt * freq) / rate;
+                    let freq = parseInt(mInfo.intFreq) || 0;
+
+                    // 🚨 僅當 freq > 0 時，才認定為「派息基金」，並計入 grandTotalIncome
+                    if (freq > 0) {
+                        if (valStr.includes('%')) {
+                            let pct = parseFloat(valStr.replace('%', '')) / 100;
+                            if (!isNaN(pct)) incomeHKD = (h.qty * ld.price * pct) / rate;
+                        } else {
+                            let amt = parseFloat(valStr);
+                            if (!isNaN(amt)) incomeHKD = (h.qty * amt * freq) / rate;
+                        }
                     }
+                    // 若 freq === 0 (空白)，視為累積型基金，incomeHKD 保持為 0，不加入總看板
                 }
 
                 grandTotalMkt += mktValueHKD; grandTotalCost += costHKD; grandTotalIncome += incomeHKD;
@@ -406,6 +408,7 @@
             });
         }
 
+        // 🎯 核心升級：視覺面板渲染 (派息=綠色，累積=藍色)
         function renderHoldings() {
             const cont = document.getElementById('holdingsContainer'); cont.innerHTML = '';
             if(dbHoldings.length === 0) return cont.innerHTML = '<p class="text-center text-xs text-slate-500 py-4">無資料，請先開設子帳戶</p>';
@@ -437,29 +440,42 @@
                             </div>`;
                         }
                     } else {
-                        // 共同基金 (Mutual Funds) 的靈活面板
+                        // 共同基金邏輯
                         let valStr = h.mInfo.intVal || "0";
-                        let incHKD = 0;
+                        let freq = parseInt(h.mInfo.intFreq) || 0;
+                        let isAccumulating = (freq === 0); // 🚨 核心開關：無頻率 = 累積型(藍色)
+                        let cardCalcHKD = 0;
                         let displayTxt = valStr;
                         let freqTxt = h.mInfo.intFreq || '-';
                         
+                        // 計算卡片顯示金額 (獨立計算)
                         if (valStr.includes('%')) {
                             let pct = parseFloat(valStr.replace('%', '')) / 100;
-                            if (!isNaN(pct)) incHKD = (h.qty * h.ld.price * pct) / h.rate;
-                            freqTxt = '依市值 %'; // 如果是 %，頻率失效
+                            if (!isNaN(pct)) cardCalcHKD = (h.qty * h.ld.price * pct) / h.rate;
+                            if (!isAccumulating) freqTxt = '依市值 %'; // 若為派息但使用%，提示文字改寫
                         } else {
                             let amt = parseFloat(valStr);
-                            let freq = parseInt(h.mInfo.intFreq) || 0;
-                            if (!isNaN(amt) && freq > 0) incHKD = (h.qty * amt * freq) / h.rate;
+                            if (!isNaN(amt) && freq > 0) cardCalcHKD = (h.qty * amt * freq) / h.rate;
                         }
                         
-                        if (incHKD > 0 || parseFloat(valStr) > 0) {
-                            extraPanel = `
-                            <div class="grid grid-cols-3 gap-2 text-[9px] bg-blue-950/40 p-2 rounded-b-lg border border-blue-900/50 mt-1">
-                                <div class="text-left text-blue-500">配息/結算頻率<br><span class="text-blue-300 font-mono">${freqTxt}</span></div>
-                                <div class="text-center border-x border-blue-900/50 px-1 text-blue-500">利息/回報率<br><span class="text-blue-300 font-mono">${displayTxt}</span></div>
-                                <div class="text-right text-blue-500">預估年增值 (HKD)<br><span class="text-blue-400 font-mono font-bold">+$${formatNum(incHKD)}</span></div>
-                            </div>`;
+                        if (cardCalcHKD > 0 || parseFloat(valStr) > 0) {
+                            if (isAccumulating) {
+                                // 🔵 累積型：顯示藍色，標示為預估增值 (不入總收)
+                                extraPanel = `
+                                <div class="grid grid-cols-3 gap-2 text-[9px] bg-blue-950/40 p-2 rounded-b-lg border border-blue-900/50 mt-1">
+                                    <div class="text-left text-blue-500">資產類別<br><span class="text-blue-300 font-mono">累積複利型</span></div>
+                                    <div class="text-center border-x border-blue-900/50 px-1 text-blue-500">1年/YTD回報<br><span class="text-blue-300 font-mono">${displayTxt}</span></div>
+                                    <div class="text-right text-blue-500">預估年增值 (HKD)<br><span class="text-blue-400 font-mono font-bold">+$${formatNum(cardCalcHKD)}</span></div>
+                                </div>`;
+                            } else {
+                                // 🟢 派息型：顯示綠色，標示為現金流 (已入總收)
+                                extraPanel = `
+                                <div class="grid grid-cols-3 gap-2 text-[9px] bg-emerald-950/40 p-2 rounded-b-lg border border-emerald-900/50 mt-1">
+                                    <div class="text-left text-emerald-500">配息/結算頻率<br><span class="text-emerald-300 font-mono">${freqTxt}</span></div>
+                                    <div class="text-center border-x border-emerald-900/50 px-1 text-emerald-500">配息率/額<br><span class="text-emerald-300 font-mono">${displayTxt}</span></div>
+                                    <div class="text-right text-emerald-500">預估年收 (HKD)<br><span class="text-emerald-400 font-mono font-bold">+$${formatNum(cardCalcHKD)}</span></div>
+                                </div>`;
+                            }
                         }
                     }
                 }
@@ -488,7 +504,6 @@
             });
         }
 
-        // 🎯 核心升級：ISIN 主檔卡片顯示 URL 連結與參數備忘
         function renderMaster() {
             const cont = document.getElementById('masterContainer');
             cont.innerHTML = '';
@@ -498,12 +513,10 @@
                     ? `<span class="text-emerald-400 font-mono font-bold text-sm">${lp.price.toFixed(4)}</span>` 
                     : `<span class="text-slate-600 text-xs font-mono">---</span>`;
                 
-                // 動態生成 Source URL 連結標籤
                 const urlHtml = m.sourceUrl 
                     ? `<a href="${m.sourceUrl}" target="_blank" class="text-blue-400 hover:text-blue-300 underline truncate">Source 官方連結</a>` 
                     : `<span class="text-slate-500">未設定</span>`;
 
-                // 共同基金的設定參數提示
                 const paramHtml = m.type === 'mutualfund' 
                     ? `<div class="text-[9px] text-slate-500 mt-1">⚙️ 設定參數: 頻率 [${m.intFreq || '-'}] | 數值 [${m.intVal || '-'}]</div>`
                     : '';
@@ -537,7 +550,6 @@
             });
         }
 
-        // 🎯 表單連動：切換公債與共同基金時，控制輸入框禁用狀態
         function toggleInterestInputs() {
             const isBond = document.getElementById('mType').value === 'bond';
             document.getElementById('mIntFreq').disabled = isBond;
@@ -570,7 +582,7 @@
                 document.getElementById('mIntFreq').value = '';
                 document.getElementById('mIntVal').value = '';
             }
-            toggleInterestInputs(); // 初始化防呆框狀態
+            toggleInterestInputs(); 
             document.getElementById('masterModal').classList.remove('hidden'); document.getElementById('masterModal').classList.add('flex');
         }
 
@@ -585,7 +597,6 @@
 
             if(!isin || !name) return alert("請完整填寫 ISIN 與資產名稱！");
 
-            // 🎯 防呆驗證：共同基金且不含 % 時，必須輸入正確的 1-12 頻率
             if (type === 'mutualfund' && intVal !== '' && !intVal.includes('%')) {
                 const freqNum = parseInt(intFreq);
                 if (isNaN(freqNum) || freqNum < 1 || freqNum > 12) {
