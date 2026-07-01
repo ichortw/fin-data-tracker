@@ -21,10 +21,10 @@
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col pb-safe">
 
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
+        <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">AssetTracker V7.0</h1>
-                <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Wealth & Cashflow Engine</p>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">AssetTracker V7.6β</h1>
+                <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Pre-GoLive先頭部隊</p>
             </div>
             <div class="flex space-x-2">
                 <button onclick="exportPublicCSV()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors" title="分享公開報價">
@@ -36,26 +36,23 @@
             </div>
         </div>
         
-        <div class="max-w-xl mx-auto mt-3 flex bg-slate-950 rounded-xl p-1 border border-slate-800">
+        <div class="max-w-md mx-auto mt-3 flex bg-slate-950 rounded-xl p-1 border border-slate-800">
             <button onclick="switchTab('overview')" id="tab-btn-overview" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-emerald-400 shadow transition-all">📊 總覽與圖表</button>
             <button onclick="switchTab('holdings')" id="tab-btn-holdings" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all">💼 資產帳戶</button>
             <button onclick="switchTab('master')" id="tab-btn-master" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all">⚙️ ISIN 報價</button>
         </div>
     </header>
 
-    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-4 overflow-y-auto no-scrollbar">
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-4 overflow-y-auto no-scrollbar">
         
-        <div class="mb-5 p-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
-            <div class="md:col-span-2">
-                <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev?key=YOUR_KEY" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-emerald-500 transition-colors">
-            </div>
-            <div class="flex flex-col space-y-1">
-                <button id="updateBtn" onclick="updateEngine()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2 text-xs">
-                    <span id="btnIcon">🔄</span>
-                    <span id="btnText">全維度數據與現金流打撈</span>
-                </button>
-                <div class="text-center text-[10px] text-slate-500 font-mono" id="lastSyncTime">系統待命，尚未進行同步。</div>
-            </div>
+        <div class="mb-5 space-y-3">
+            <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-emerald-500 transition-colors">
+            
+            <button id="updateBtn" onclick="updateEngine()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
+                <span id="btnIcon">🔄</span>
+                <span id="btnText">全維度數據與現金流打撈</span>
+            </button>
+            <div class="text-center text-[10px] text-slate-500 font-mono" id="lastSyncTime">系統待命，尚未進行同步。</div>
         </div>
 
         <div id="tab-overview" class="space-y-6">
@@ -79,54 +76,48 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col items-center">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg flex flex-col items-center">
                     <h3 class="text-[10px] text-slate-400 font-bold uppercase mb-2 w-full text-center">Bucket 佔比</h3>
-                    <div class="w-full relative aspect-square max-h-[220px]">
+                    <div class="w-full relative aspect-square">
                         <canvas id="bucketChart"></canvas>
                     </div>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col items-center">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg flex flex-col items-center">
                     <h3 class="text-[10px] text-slate-400 font-bold uppercase mb-2 w-full text-center">ISIN 浮盈虧排行</h3>
-                    <div class="w-full relative min-h-[180px] max-h-[220px] flex-1">
+                    <div class="w-full relative min-h-[150px] flex-1">
                         <canvas id="pnlChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
-                <div>
-                    <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-amber-500 pl-2">Bucket 維度統計</h3>
-                    <div id="bucketSummaryContainer" class="space-y-2"></div>
-                </div>
-                <div>
-                    <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-emerald-500 pl-2">ISIN 維度統計</h3>
-                    <div id="isinSummaryContainer" class="space-y-2"></div>
-                </div>
+            <div>
+                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-amber-500 pl-2">Bucket 維度統計</h3>
+                <div id="bucketSummaryContainer" class="space-y-2"></div>
+            </div>
+            <div class="pb-6">
+                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-emerald-500 pl-2">ISIN 維度統計</h3>
+                <div id="isinSummaryContainer" class="space-y-2"></div>
             </div>
         </div>
 
         <div id="tab-holdings" class="hidden space-y-4 pb-6">
-            <div class="flex justify-center">
-                <button onclick="openHoldingModal()" class="w-full md:w-auto md:px-8 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>開設資產子帳戶</span>
-                </button>
-            </div>
-            <div id="holdingsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"></div>
+            <button onclick="openHoldingModal()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>開設資產子帳戶</span>
+            </button>
+            <div id="holdingsContainer" class="space-y-3 mt-4"></div>
         </div>
 
         <div id="tab-master" class="hidden space-y-4 pb-6">
-            <div class="flex justify-center">
-                <button onclick="openMasterModal()" class="w-full md:w-auto md:px-8 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>新增 ISIN 標的</span>
-                </button>
-            </div>
-            <div id="masterContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"></div>
+            <button onclick="openMasterModal()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>新增 ISIN 標的</span>
+            </button>
+            <div id="masterContainer" class="space-y-3 mt-4"></div>
 
-            <div class="mt-8 border-t border-slate-800 pt-6 max-w-xl mx-auto w-full">
-                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-cyan-500 pl-2 text-center md:text-left">系統備份與還原 (JSON)</h3>
+            <div class="mt-8 border-t border-slate-800 pt-6">
+                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-cyan-500 pl-2">系統備份與還原 (JSON)</h3>
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="backupJSON()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2 text-sm">
                         <span>📥 備份</span>
@@ -143,18 +134,31 @@
 
     <div id="masterModal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-5 shadow-2xl">
-            <h3 class="text-base font-bold text-slate-100 mb-4 border-b border-slate-800 pb-2">新增 ISIN 主檔</h3>
+            <h3 id="mModalTitle" class="text-base font-bold text-slate-100 mb-4 border-b border-slate-800 pb-2">新增 ISIN 標的</h3>
             <div class="space-y-3">
-                <input type="text" id="mIsin" placeholder="ISIN (12碼大寫)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm uppercase">
-                <select id="mType" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm">
-                    <option value="mutualfund">MutualFund (共同基金)</option>
-                    <option value="bond">Bond (公債)</option>
-                </select>
-                <input type="text" id="mName" placeholder="自訂名稱" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm">
+                <div>
+                    <label class="text-[10px] text-slate-400">ISIN (12碼代碼，鎖定不可改)</label>
+                    <input type="text" id="mIsin" placeholder="ISIN (12碼大寫)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm uppercase mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-400">資產類別</label>
+                    <select id="mType" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm mt-1">
+                        <option value="mutualfund">MutualFund (共同基金)</option>
+                        <option value="bond">Bond (公債)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-slate-400">自訂資產名稱</label>
+                    <input type="text" id="mName" placeholder="自訂名稱" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] text-amber-400 font-bold">✨ Source URL (網址來源)</label>
+                    <input type="text" id="mSourceUrl" placeholder="https://www.pimco.com/..." class="w-full bg-slate-950 border border-amber-600/50 rounded-lg px-3 py-2 text-slate-200 font-mono text-xs mt-1 focus:border-amber-400 focus:outline-none">
+                </div>
             </div>
             <div class="grid grid-cols-2 gap-3 mt-6">
                 <button onclick="closeModals()" class="bg-slate-800 text-slate-300 py-2.5 rounded-lg text-sm">取消</button>
-                <button onclick="saveMaster()" class="bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-bold">儲存</button>
+                <button onclick="saveMaster()" class="bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-bold">儲存變更</button>
             </div>
         </div>
     </div>
@@ -209,6 +213,10 @@
 
         window.onload = function() {
             loadWorkerUrl();
+            // ✨ V7.6 資料洗車機自動執行，補齊 sourceUrl 屬性
+            dbMaster = dbMaster.map(m => ({ ...m, sourceUrl: m.sourceUrl || '' }));
+            localStorage.setItem('v6_isin_master', JSON.stringify(dbMaster));
+
             if(dbMaster.length === 0) seedDefaultData(); 
             switchTab('overview');
             renderAll(); 
@@ -365,6 +373,7 @@
 
         function renderHoldings() {
             const cont = document.getElementById('holdingsContainer'); cont.innerHTML = '';
+            if(dbHoldings.length === 0) return cont.innerHTML = '<p class="text-center text-xs text-slate-500 py-4">無資料，請先開設子帳戶</p>';
             
             let enrichedHoldings = dbHoldings.map(h => {
                 const mInfo = dbMaster.find(m => m.isin === h.isin) || { name: '未知', type: 'fund' };
@@ -382,7 +391,7 @@
                 let extraPanel = '';
                 if (h.ld.status === 'ok') {
                     if (!h.ld.isAcc && h.ld.divRate > 0) {
-                        let incHKD = (h.mInfo.type === 'bond') ? (100 * (h.mInfo.type === 'bond' ? 0.01 : 1) * h.qty * h.ld.divRate) / h.rate : (h.ld.divRate * h.qty) / h.rate;
+                        let incHKD = (h.mInfo.type === 'bond') ? (100 * 0.01 * h.qty * h.ld.divRate) / h.rate : (h.ld.divRate * h.qty) / h.rate;
                         let divTxt = (h.mInfo.type === 'bond') ? `${(h.ld.divRate*100).toFixed(2)}%` : h.ld.divRate.toFixed(4);
                         extraPanel = `
                         <div class="grid grid-cols-3 gap-2 text-[9px] bg-emerald-950/40 p-2 rounded-b-lg border border-emerald-900/50 mt-1">
@@ -402,25 +411,23 @@
                 }
 
                 cont.innerHTML += `
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow relative overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex flex-col"><div class="flex items-center space-x-2"><span class="bg-amber-900/40 text-amber-500 font-bold px-1.5 py-0.5 rounded text-[10px] border border-amber-700/50">${h.bucket}</span><span class="text-sm font-bold text-slate-200">${h.mInfo.name}</span></div><p class="text-[10px] text-slate-500 font-mono mt-0.5 ml-1">${h.isin}</p></div>
-                            <div class="flex space-x-1 flex-shrink-0">
-                                <button onclick="openHoldingModal('${h.id}')" class="p-1.5 text-slate-400 hover:text-blue-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
-                                <button onclick="delHolding('${h.id}')" class="p-1.5 text-slate-400 hover:text-red-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
-                            </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex flex-col"><div class="flex items-center space-x-2"><span class="bg-amber-900/40 text-amber-500 font-bold px-1.5 py-0.5 rounded text-[10px] border border-amber-700/50">${h.bucket}</span><span class="text-sm font-bold text-slate-200">${h.mInfo.name}</span></div><p class="text-[10px] text-slate-500 font-mono mt-0.5 ml-1">${h.isin}</p></div>
+                        <div class="flex space-x-1 flex-shrink-0">
+                            <button onclick="openHoldingModal('${h.id}')" class="p-1.5 text-slate-400 hover:text-blue-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                            <button onclick="delHolding('${h.id}')" class="p-1.5 text-slate-400 hover:text-red-400 bg-slate-800 rounded"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
-                        <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-950 p-2 rounded-t-lg border border-slate-800/50 border-b-0">
-                            <div class="text-left"><p class="text-slate-500">均價 (${h.currency})</p><p class="font-mono text-slate-300">${h.avgPrice.toFixed(4)}</p></div>
-                            <div class="text-center border-x border-slate-800/50 px-1"><p class="text-slate-500">現價 (${h.currency})</p><p class="font-mono font-bold text-slate-200">${displayPrice}</p></div>
-                            <div class="text-right"><p class="text-slate-500">數量</p><p class="font-mono text-slate-300 font-bold">${h.qty}</p></div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-800/40 p-2 rounded-b-lg border border-slate-800/50 ${extraPanel ? 'rounded-b-none border-b-0' : ''}">
-                            <div class="text-left"><p class="text-slate-500">成本 (HKD)</p><p class="font-mono text-slate-400">$${formatNum(h.costHKD)}</p></div>
-                            <div class="text-center border-x border-slate-700/50 px-1"><p class="text-slate-500">市值 (HKD)</p><p class="font-mono text-slate-100">$${formatNum(h.mktHKD)}</p></div>
-                            <div class="text-right"><p class="text-slate-500">浮盈/虧</p><p class="font-mono font-bold ${pnlColor}">${h.pnlHKD>=0?'+':''}$${formatNum(h.pnlHKD)}</p></div>
-                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-950 p-2 rounded-t-lg border border-slate-800/50 border-b-0">
+                        <div class="text-left"><p class="text-slate-500">均價 (${h.currency})</p><p class="font-mono text-slate-300">${h.avgPrice.toFixed(4)}</p></div>
+                        <div class="text-center border-x border-slate-800/50 px-1"><p class="text-slate-500">現價 (${h.currency})</p><p class="font-mono font-bold text-slate-200">${displayPrice}</p></div>
+                        <div class="text-right"><p class="text-slate-500">數量</p><p class="font-mono text-slate-300 font-bold">${h.qty}</p></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-800/40 p-2 rounded-b-lg border border-slate-800/50 ${extraPanel ? 'rounded-b-none border-b-0' : ''}">
+                        <div class="text-left"><p class="text-slate-500">成本 (HKD)</p><p class="font-mono text-slate-400">$${formatNum(h.costHKD)}</p></div>
+                        <div class="text-center border-x border-slate-700/50 px-1"><p class="text-slate-500">市值 (HKD)</p><p class="font-mono text-slate-100">$${formatNum(h.mktHKD)}</p></div>
+                        <div class="text-right"><p class="text-slate-500">浮盈/虧</p><p class="font-mono font-bold ${pnlColor}">${h.pnlHKD>=0?'+':''}$${formatNum(h.pnlHKD)}</p></div>
                     </div>
                     ${extraPanel}
                 </div>`;
@@ -484,6 +491,7 @@
             }
         }
 
+        // ✨ V7.6 重頭戲：ISIN主檔卡片新增「編輯 ✏️」按鈕，且核心主鍵防呆鎖定
         function renderMaster() {
             const cont = document.getElementById('masterContainer');
             cont.innerHTML = '';
@@ -494,43 +502,82 @@
                     : `<span class="text-slate-600 text-xs font-mono">---</span>`;
 
                 cont.innerHTML += `
-                <div class="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-lg p-3 shadow">
-                    <div class="overflow-hidden flex-1">
-                        <p class="text-sm font-bold text-slate-200 truncate">${m.name}</p>
-                        <p class="text-[10px] text-slate-500 font-mono">${m.isin} | ${m.type.toUpperCase()}</p>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="text-right leading-tight">
-                            <p class="text-[9px] text-slate-500">最新報價</p>
-                            ${priceHtml}
+                <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div class="overflow-hidden flex-1">
+                            <p class="text-sm font-bold text-slate-200 truncate">${m.name}</p>
+                            <p class="text-[10px] text-slate-500 font-mono">${m.isin} | ${m.type.toUpperCase()}</p>
                         </div>
-                        <button onclick="delMaster('${m.isin}')" class="p-2 hover:bg-red-900/50 text-slate-500 hover:text-red-400 rounded-lg transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
+                        <div class="flex items-center space-x-2">
+                            <div class="text-right leading-tight pr-2 border-r border-slate-800">
+                                <p class="text-[9px] text-slate-500">最新報價</p>
+                                ${priceHtml}
+                            </div>
+                            <button onclick="openMasterModal('${m.isin}')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-400 rounded-lg transition-colors" title="編輯主檔">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                            </button>
+                            <button onclick="delMaster('${m.isin}')" class="p-2 bg-slate-800 hover:bg-red-900/40 text-slate-500 hover:text-red-400 rounded-lg transition-colors" title="刪除主檔">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-[10px] bg-slate-950 p-1.5 rounded font-mono text-slate-400 truncate border border-slate-800/60 flex items-center">
+                        <span class="text-amber-500 mr-1 flex-shrink-0">🔗 URL:</span>
+                        <span class="truncate">${m.sourceUrl || '未設定 (預設執行 API 智慧打撈)'}</span>
                     </div>
                 </div>`;
             });
         }
 
-        function openMasterModal() {
+        function openMasterModal(isin = null) {
+            const isinInput = document.getElementById('mIsin');
+            const typeSelect = document.getElementById('mType');
+            
+            if (isin) {
+                // 進入「編輯」模式
+                document.getElementById('mModalTitle').innerText = '✏️ 編輯 ISIN 主檔';
+                const m = dbMaster.find(x => x.isin === isin);
+                isinInput.value = m.isin; isinInput.disabled = true; // 🎯 防呆：鎖定核心主鍵
+                typeSelect.value = m.type; typeSelect.disabled = true; // 類別同步鎖定
+                document.getElementById('mName').value = m.name;
+                document.getElementById('mSourceUrl').value = m.sourceUrl || '';
+            } else {
+                // 進入「新增」模式
+                document.getElementById('mModalTitle').innerText = '➕ 新增 ISIN 標的';
+                isinInput.value = ''; isinInput.disabled = false;
+                typeSelect.value = 'mutualfund'; typeSelect.disabled = false;
+                document.getElementById('mName').value = '';
+                document.getElementById('mSourceUrl').value = '';
+            }
             document.getElementById('masterModal').classList.remove('hidden'); document.getElementById('masterModal').classList.add('flex');
-            document.getElementById('mIsin').value = ''; document.getElementById('mName').value = '';
         }
 
         function saveMaster() {
-            const isin = document.getElementById('mIsin').value.trim().toUpperCase();
+            const isinInput = document.getElementById('mIsin');
+            const isin = isinInput.value.trim().toUpperCase();
             const type = document.getElementById('mType').value;
             const name = document.getElementById('mName').value.trim();
-            if(!isin || !name) return alert("請完整填寫 ISIN 與名稱！");
-            if(dbMaster.find(m => m.isin === isin)) return alert("該 ISIN 已存在於主檔中！");
+            const sourceUrl = document.getElementById('mSourceUrl').value.trim();
 
-            dbMaster.push({ isin, type, name });
+            if(!isin || !name) return alert("請完整填寫 ISIN 與資產名稱！");
+
+            if (isinInput.disabled) {
+                // 🎯 編輯儲存邏輯
+                const idx = dbMaster.findIndex(m => m.isin === isin);
+                dbMaster[idx].name = name;
+                dbMaster[idx].sourceUrl = sourceUrl;
+            } else {
+                // 🎯 新增儲存邏輯
+                if(dbMaster.find(m => m.isin === isin)) return alert("該 ISIN 已存在於主檔中！");
+                dbMaster.push({ isin, type, name, sourceUrl });
+            }
+
             localStorage.setItem('v6_isin_master', JSON.stringify(dbMaster));
             closeModals(); renderAll();
         }
 
         function delMaster(isin) {
-            if(dbHoldings.find(h => h.isin === isin)) return alert("無法刪除！因為在「資產帳戶」中仍有部位綁定此標的。請先清空部位。");
+            if(dbHoldings.find(h => h.isin === isin)) return alert("無法刪除！因為在「資產帳戶」中仍有部位團隊綁定此標的。請先清空該帳戶部位。");
             if(confirm('確定刪除此 ISIN 主檔？')) {
                 dbMaster = dbMaster.filter(m => m.isin !== isin);
                 localStorage.setItem('v6_isin_master', JSON.stringify(dbMaster));
@@ -539,9 +586,9 @@
         }
 
         function backupJSON() {
-            const data = { schema_version: "1.0", export_date: new Date().toISOString(), master: dbMaster, holdings: dbHoldings };
+            const data = { schema_version: "1.1", export_date: new Date().toISOString(), master: dbMaster, holdings: dbHoldings };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            forceDownload(blob, `AssetTracker_DB_Backup_${new Date().toISOString().slice(0, 10)}.json`);
+            forceDownload(blob, `AssetTracker_V7.6_Backup_${new Date().toISOString().slice(0, 10)}.json`);
         }
 
         function restoreJSON(event) {
@@ -553,7 +600,14 @@
                     const data = JSON.parse(e.target.result);
                     if (!data.master || !data.holdings) throw new Error("檔案缺少核心資料表");
 
-                    dbMaster = data.master.map(m => ({ isin: m.isin || '', type: m.type || 'mutualfund', name: m.name || '未命名' }));
+                    // 🎯 V7.6 智慧還原洗車機：自動幫歷史 JSON 補足 sourceUrl 屬性，防崩潰
+                    dbMaster = data.master.map(m => ({ 
+                        isin: m.isin || '', 
+                        type: m.type || 'mutualfund', 
+                        name: m.name || '未命名',
+                        sourceUrl: m.sourceUrl || '' 
+                    }));
+                    
                     dbHoldings = data.holdings.map(h => ({
                         id: h.id || `pos_${Math.random().toString(36).substr(2, 9)}`, isin: h.isin || '', bucket: h.bucket || 'XX', currency: h.currency || 'USD',
                         qty: Number(h.qty) || 0, avgPrice: Number(h.avgPrice) || 0
@@ -564,36 +618,32 @@
                     
                     document.getElementById('restoreInput').value = ''; 
                     renderAll();
-                    alert(`✅ 系統還原成功！\n共載入 ${dbMaster.length} 筆主檔與 ${dbHoldings.length} 筆子帳戶。`);
-                } catch (err) { alert("❌ 還原失敗：JSON 格式損毀或不相容。"); console.error(err); }
+                    alert(`✅ 系統洗車還原成功！\n共載入 ${dbMaster.length} 筆主檔與 ${dbHoldings.length} 筆子帳戶。`);
+                } catch (err) { alert("❌ 還原失敗：JSON 格式損毀或不相容。"); }
             };
             reader.readAsText(file);
         }
 
         function exportPublicCSV() {
-            let csv = "資產名稱,ISIN,類別,最新報價\n";
+            let csv = "資產名稱,ISIN,類別,最新報價,資料來源網址\n";
             dbMaster.forEach(m => {
                 const lp = liveData[m.isin];
-                csv += `"${m.name}","${m.isin}","${m.type}","${lp?.price || '---'}"\n`;
+                csv += `"${m.name}","${m.isin}","${m.type}","${lp?.price || '---'}","${m.sourceUrl}"\n`;
             });
             triggerShareOrDownload(csv, 'AssetTracker_Public_Quotes', true);
         }
 
         function exportPrivateCSV() {
             if(!confirm("⚠️ 嚴重警告！\n此導出報表包含您真實的財富總值、持有數量與浮盈虧等高度私密資訊。\n\n為了安全，系統將自動封鎖社交分享面板，僅允許儲存於本機。確定要導出嗎？")) return;
-            
-            let csv = "Bucket,子帳戶 ID,關聯標的(ISIN),資產名稱,結算幣別,持有數量,平均買入價(外幣),現價(外幣),帳戶市值(HKD),帳戶浮盈虧(HKD)\n";
+            let csv = "Bucket,子帳戶 ID,關聯標的(ISIN),資產名稱,結算幣別,持有數量,平均買入價,現價,帳戶市值(HKD),帳戶浮盈虧(HKD)\n";
             dbHoldings.forEach(h => {
                 const mInfo = dbMaster.find(m => m.isin === h.isin) || { name: '未知', type: 'fund' };
                 const ld = liveData[h.isin] || { price: 0 };
                 const rate = fxRates[h.currency] || 1;
                 const multiplier = (mInfo.type === 'bond') ? 0.01 : 1;
-                
                 const mktHKD = (ld.price * multiplier * h.qty) / rate;
                 const costHKD = (h.avgPrice * multiplier * h.qty) / rate;
-                const pnlHKD = mktHKD - costHKD;
-                
-                csv += `"${h.bucket}","${h.id}","${h.isin}","${mInfo.name}","${h.currency}",${h.qty},${h.avgPrice},${ld.price},${mktHKD.toFixed(2)},${pnlHKD.toFixed(2)}\n`;
+                csv += `"${h.bucket}","${h.id}","${h.isin}","${mInfo.name}","${h.currency}",${h.qty},${h.avgPrice},${ld.price},${mktHKD.toFixed(2)},${(mktHKD-costHKD).toFixed(2)}\n`;
             });
             triggerShareOrDownload(csv, 'AssetTracker_PRIVATE_LEDGER', false);
         }
@@ -601,17 +651,13 @@
         function triggerShareOrDownload(csvContent, filenamePrefix, allowShare) {
             const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
             const fileName = `${filenamePrefix}_${new Date().toISOString().slice(0, 10)}.csv`;
-            
             if (allowShare && navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, {type: 'text/csv'})] })) {
-                navigator.share({ files: [new File([blob], fileName, { type: 'text/csv' })], title: '報價分享' })
-                .catch(() => forceDownload(blob, fileName));
+                navigator.share({ files: [new File([blob], fileName, { type: 'text/csv' })], title: '報價分享' }).catch(() => forceDownload(blob, fileName));
             } else { forceDownload(blob, fileName); }
         }
 
         function forceDownload(blob, fileName) {
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
+            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = fileName;
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
@@ -631,26 +677,18 @@
             document.getElementById('holdingModal').classList.add('hidden'); document.getElementById('holdingModal').classList.remove('flex');
         }
 
-        function formatNum(num) { 
-            return num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); 
-        }
-
-        function saveWorkerUrl() { 
-            localStorage.setItem('v6_worker_url', document.getElementById('workerUrlInput').value.trim()); 
-        }
-
-        function loadWorkerUrl() { 
-            document.getElementById('workerUrlInput').value = localStorage.getItem('v6_worker_url') || ''; 
-        }
-
+        function formatNum(num) { return num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+        function saveWorkerUrl() { localStorage.setItem('v6_worker_url', document.getElementById('workerUrlInput').value.trim()); }
+        function loadWorkerUrl() { document.getElementById('workerUrlInput').value = localStorage.getItem('v6_worker_url') || ''; }
+        
         function seedDefaultData() {
             dbMaster = [
-                { isin: 'US912810UB25', type: 'bond', name: '美元國債 2044' },
-                { isin: 'IE00B92ZW543', type: 'mutualfund', name: 'PIMCO收益基金' }
+                { isin: 'US912810UB25', type: 'bond', name: '美元國債 2044', sourceUrl: 'https://tw.tradingview.com/symbols/OTCB-912810UB2/' },
+                { isin: 'IE0004WJOWO1', type: 'mutualfund', name: 'PIMCO收益基金港元派息', sourceUrl: 'https://www.pimco.com/hk/zh/investments/gis/pimco-balanced-income-and-growth-fund/mretl-hkd-unhedged-income-ii' }
             ];
             dbHoldings = [
-                { id: 'pos_1', isin: 'US912810UB25', bucket: 'WL', currency: 'USD', qty: 10000, avgPrice: 95.5 },
-                { id: 'pos_2', isin: 'IE00B92ZW543', bucket: 'HB', currency: 'HKD', qty: 5000, avgPrice: 10.2 }
+                { id: 'pos_1', isin: 'US912810UB25', bucket: 'WL', currency: 'USD', qty: 70000, avgPrice: 98.125 },
+                { id: 'pos_2', isin: 'IE0004WJOWO1', bucket: 'HB', currency: 'HKD', qty: 46500.661, avgPrice: 10.99 }
             ];
             localStorage.setItem('v6_isin_master', JSON.stringify(dbMaster));
             localStorage.setItem('v6_asset_holdings', JSON.stringify(dbHoldings));
