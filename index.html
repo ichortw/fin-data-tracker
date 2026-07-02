@@ -44,7 +44,7 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">AssetTracker V8.1</h1>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">AssetTracker V8.2</h1>
                 <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Production Live 終極合龍版</p>
             </div>
             <div class="flex space-x-2">
@@ -297,14 +297,16 @@
                     if (!res.ok) throw new Error();
                     const data = await res.json();
                     if (data.status === 'success') {
+                        // 🟢 核心連動：前端將後端打撈到的 updateTime 妥善存入 liveData
                         liveData[m.isin] = { 
                             price: data.price, 
                             divRate: data.dividendRate || 0,
                             exDiv: data.exDivDate || '無資料',
+                            updateTime: data.updateTime || '---',
                             status: 'ok' 
                         };
-                    } else { liveData[m.isin] = { price: 0, status: 'error' }; }
-                } catch { liveData[m.isin] = { price: 0, status: 'error' }; }
+                    } else { liveData[m.isin] = { price: 0, updateTime: '錯誤', status: 'error' }; }
+                } catch { liveData[m.isin] = { price: 0, updateTime: '異常', status: 'error' }; }
             });
             await Promise.all(promises);
         }
@@ -324,6 +326,7 @@
             calculateAndRenderOverview(); 
         }
 
+        // 結算與統計引擎維持不變
         function calculateAndRenderOverview() {
             let grandTotalMkt = 0; let grandTotalCost = 0; let grandTotalIncome = 0;
             let bucketMap = {}; let isinMap = {};   
@@ -495,7 +498,6 @@
                     }
                 }
 
-                // 🟢 修正：加入 p-2.5 sm:p-3 與間距微調，解決手機溢出
                 cont.innerHTML += `
                 <div class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 sm:p-3 shadow relative overflow-hidden flex flex-col h-full">
                     <div class="flex justify-between items-start mb-3">
@@ -520,14 +522,19 @@
             });
         }
 
-        // 🟢 修正：加入 p-2.5 sm:p-3、min-w-0、與縮小右側間距，解決手機溢出
+        // 🎯 核心升級：ISIN 主檔報價卡片完美渲染正牌的行情清算時間戳記 (Market Clear Timestamp)
         function renderMaster() {
             const cont = document.getElementById('masterContainer');
             cont.innerHTML = '';
             dbMaster.forEach((m) => {
                 const lp = liveData[m.isin];
+                
+                // 🟢 視覺亮點：如果拿到時間戳記，將其優雅地以冷灰色微縮字印在價格正下方，極具金融終端感
                 const priceHtml = lp?.price 
-                    ? `<span class="text-emerald-400 font-mono font-bold text-xs sm:text-sm">${lp.price.toFixed(4)}</span>` 
+                    ? `<div class="flex flex-col items-end">
+                         <span class="text-emerald-400 font-mono font-bold text-xs sm:text-sm">${lp.price.toFixed(4)}</span>
+                         <span class="text-[7px] text-slate-500 font-mono tracking-tighter mt-0.5 scale-90 origin-right whitespace-nowrap">${lp.updateTime || '---'}</span>
+                       </div>` 
                     : `<span class="text-slate-600 text-[10px] sm:text-xs font-mono">---</span>`;
                 
                 const urlHtml = m.sourceUrl 
@@ -547,16 +554,12 @@
                             ${paramHtml}
                         </div>
                         <div class="flex items-center space-x-1 flex-shrink-0">
-                            <div class="text-right leading-tight pr-1 border-r border-slate-800">
-                                <p class="text-[8px] sm:text-[9px] text-slate-500">最新報價</p>
+                            <div class="text-right leading-none pr-1.5 border-r border-slate-800">
+                                <p class="text-[8px] sm:text-[9px] text-slate-500 mb-0.5">最新報價</p>
                                 ${priceHtml}
                             </div>
-                            <button onclick="openMasterModal('${m.isin}')" class="p-1 sm:p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-blue-400 rounded-lg transition-colors" title="編輯主檔">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                            </button>
-                            <button onclick="delMaster('${m.isin}')" class="p-1 sm:p-1.5 bg-slate-800 hover:bg-red-900/40 text-slate-500 hover:text-red-400 rounded-lg transition-colors" title="刪除主檔">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
+                            <button onclick="openMasterModal('${m.isin}')" class="p-1 sm:p-1.5 text-slate-400 hover:text-blue-400 bg-slate-800 rounded transition-colors" title="編輯主檔"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+                            <button onclick="delMaster('${m.isin}')" class="p-1 sm:p-1.5 text-slate-500 hover:text-red-400 bg-slate-800 rounded transition-colors" title="刪除主檔"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                     </div>
                     <div class="text-[10px] bg-slate-950 p-1.5 rounded font-mono text-slate-400 truncate border border-slate-800/60 flex items-center mt-auto">
@@ -705,7 +708,7 @@
         function backupJSON() {
             const data = { schema_version: "1.1", export_date: new Date().toISOString(), master: dbMaster, holdings: dbHoldings };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            forceDownload(blob, `AssetTracker_V8.1_FitScreen_${new Date().toISOString().slice(0, 10)}.json`);
+            forceDownload(blob, `AssetTracker_V8.2_${new Date().toISOString().slice(0, 10)}.json`);
         }
 
         function restoreJSON(event) {
@@ -739,10 +742,10 @@
         }
 
         function exportPublicCSV() {
-            let csv = "資產名稱,ISIN,類別,最新報價,派息頻率,派息數值,資料來源網址\n";
+            let csv = "資產名稱,ISIN,類別,最新報價,派息頻率,派息數值,資料來源網址,清算時間\n";
             dbMaster.forEach(m => {
                 const lp = liveData[m.isin];
-                csv += `"${m.name}","${m.isin}","${m.type}","${lp?.price || '---'}","${m.intFreq || '-'}","${m.intVal || '-'}","${m.sourceUrl}"\n`;
+                csv += `"${m.name}","${m.isin}","${m.type}","${lp?.price || '---'}","${m.intFreq || '-'}","${m.intVal || '-'}","${m.sourceUrl}","${lp?.updateTime || '-'}"\n`;
             });
             triggerShareOrDownload(csv, 'AssetTracker_Public_Quotes', true);
         }
