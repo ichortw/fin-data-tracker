@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AssetTracker 行動資產看板</title>
+    <title>金算盤</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="manifest" href="manifest.json">
@@ -44,8 +44,8 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">AssetTracker V8.2</h1>
-                <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Production Live 終極合龍版</p>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">金算盤 V8.2</h1>
+                <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">形神千里天邊翻雲版</p>
             </div>
             <div class="flex space-x-2">
                 <button onclick="exportPublicCSV()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors" title="分享公開報價">
@@ -65,17 +65,6 @@
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-4 overflow-y-auto no-scrollbar">
-        
-        <div class="mb-5 space-y-3 max-w-md mx-auto">
-            <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-emerald-500 transition-colors">
-            
-            <button id="updateBtn" onclick="updateEngine()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
-                <span id="btnIcon">🔄</span>
-                <span id="btnText">啟動形神千里 API</span>
-            </button>
-            <div class="text-center text-[10px] text-slate-500 font-mono" id="lastSyncTime">系統待命，尚未進行同步。</div>
-        </div>
-
         <div id="tab-overview" class="space-y-6">
             <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl relative overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
@@ -133,7 +122,19 @@
         </div>
 
         <div id="tab-master" class="hidden pb-6">
-            <div class="max-w-md mx-auto mb-4">
+            
+            <div class="mb-5 space-y-3 max-w-md mx-auto">
+                <div class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mb-1 border-l border-emerald-500 pl-1.5">⚙️ 邊緣網絡核心路由 (備用防禦設施)</div>
+                <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-emerald-500 transition-colors">
+                
+                <button id="updateBtn" onclick="updateEngine()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center space-x-2">
+                    <span id="btnIcon">🔄</span>
+                    <span id="btnText">啟動形神千里 API</span>
+                </button>
+                <div class="text-center text-[10px] text-slate-500 font-mono" id="lastSyncTime">系統待命，尚未進行同步。</div>
+            </div>
+
+            <div class="max-w-md mx-auto mb-4 border-t border-slate-900 pt-4">
                 <button onclick="openMasterModal()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     <span>新增 ISIN 標的</span>
@@ -297,7 +298,6 @@
                     if (!res.ok) throw new Error();
                     const data = await res.json();
                     if (data.status === 'success') {
-                        // 🟢 核心連動：前端將後端打撈到的 updateTime 妥善存入 liveData
                         liveData[m.isin] = { 
                             price: data.price, 
                             divRate: data.dividendRate || 0,
@@ -320,13 +320,12 @@
             } catch (e) {}
         }
 
-        function renderAll() {
+        function运行all() {
             renderMaster(); 
             renderHoldings(); 
             calculateAndRenderOverview(); 
         }
 
-        // 結算與統計引擎維持不變
         function calculateAndRenderOverview() {
             let grandTotalMkt = 0; let grandTotalCost = 0; let grandTotalIncome = 0;
             let bucketMap = {}; let isinMap = {};   
@@ -504,7 +503,7 @@
                         <div class="flex flex-col min-w-0 pr-1"><div class="flex items-center space-x-2"><span class="bg-amber-900/40 text-amber-500 font-bold px-1.5 py-0.5 rounded text-[10px] border border-amber-700/50 flex-shrink-0">${h.bucket}</span><span class="text-sm font-bold text-slate-200 truncate">${h.mInfo.name}</span></div><p class="text-[10px] text-slate-500 font-mono mt-0.5 ml-1 truncate">${h.isin}</p></div>
                         <div class="flex space-x-1 flex-shrink-0">
                             <button onclick="openHoldingModal('${h.id}')" class="p-1 sm:p-1.5 text-slate-400 hover:text-blue-400 bg-slate-800 rounded"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
-                            <button onclick="delHolding('${h.id}')" class="p-1 sm:p-1.5 text-slate-400 hover:text-red-400 bg-slate-800 rounded"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                            <button onclick="delHolding('${h.id}')" class="p-1 sm:p-1.5 text-slate-500 hover:text-red-400 bg-slate-800 rounded"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 text-[10px] bg-slate-950 p-2 rounded-t-lg border border-slate-800/50 border-b-0 mt-auto">
@@ -522,14 +521,12 @@
             });
         }
 
-        // 🎯 核心升級：ISIN 主檔報價卡片完美渲染正牌的行情清算時間戳記 (Market Clear Timestamp)
         function renderMaster() {
             const cont = document.getElementById('masterContainer');
             cont.innerHTML = '';
             dbMaster.forEach((m) => {
                 const lp = liveData[m.isin];
                 
-                // 🟢 視覺亮點：如果拿到時間戳記，將其優雅地以冷灰色微縮字印在價格正下方，極具金融終端感
                 const priceHtml = lp?.price 
                     ? `<div class="flex flex-col items-end">
                          <span class="text-emerald-400 font-mono font-bold text-xs sm:text-sm">${lp.price.toFixed(4)}</span>
