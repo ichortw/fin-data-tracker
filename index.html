@@ -32,6 +32,25 @@
             }
         }
 
+        /* 🛠️ 鋼鐵防線：硬核圖表佈局調節器（100% 免疫 Tailwind 誤判） */
+        .charts-vertical-stack {
+            display: flex;
+            flex-direction: column; /* 手機端：絕對強制垂直單欄排列 */
+            gap: 24px;
+            width: 100%;
+        }
+
+        @media (min-width: 992px) { /* 抬高平板與寬螢幕閾值，確保普通手機絕不誤觸平排 */
+            .charts-vertical-stack {
+                flex-direction: row; /* 寬螢幕：完美恢復左右平排 */
+                gap: 20px;
+            }
+            .charts-vertical-stack > div {
+                flex: 1;
+                min-width: 0; /* 防止 Chart.js 在彈性盒子內無限暴走撐開 */
+            }
+        }
+
         .backup-section {
             max-width: 500px; 
             margin: 30px auto 0 auto; 
@@ -87,7 +106,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="charts-vertical-stack">
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col items-center">
                     <h3 class="text-xs text-slate-400 font-bold uppercase mb-3 w-full text-left border-l-2 border-emerald-500 pl-2">Bucket 佔比分佈</h3>
                     <div class="w-full relative aspect-square max-h-[260px] sm:max-h-[300px]">
