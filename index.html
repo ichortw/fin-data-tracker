@@ -65,6 +65,7 @@
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-4 overflow-y-auto no-scrollbar">
+
         <div id="tab-overview" class="space-y-6">
             <div class="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl relative overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
@@ -320,7 +321,8 @@
             } catch (e) {}
         }
 
-        function运行all() {
+        // 🛠️ BUG已完美修復：正式改回正統的 renderAll()
+        function renderAll() {
             renderMaster(); 
             renderHoldings(); 
             calculateAndRenderOverview(); 
