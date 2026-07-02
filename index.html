@@ -87,27 +87,28 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg flex flex-col items-center">
-                    <h3 class="text-[10px] md:text-xs text-slate-400 font-bold uppercase mb-2 w-full text-center">Bucket 佔比</h3>
-                    <div class="w-full relative aspect-square max-h-[300px]">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col items-center">
+                    <h3 class="text-xs text-slate-400 font-bold uppercase mb-3 w-full text-left border-l-2 border-emerald-500 pl-2">Bucket 佔比分佈</h3>
+                    <div class="w-full relative aspect-square max-h-[260px] sm:max-h-[300px]">
                         <canvas id="bucketChart"></canvas>
                     </div>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg flex flex-col items-center">
-                    <h3 class="text-[10px] md:text-xs text-slate-400 font-bold uppercase mb-2 w-full text-center">ISIN 浮盈虧排行</h3>
-                    <div class="w-full relative min-h-[150px] max-h-[300px] flex-1">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col items-center">
+                    <h3 class="text-xs text-slate-400 font-bold uppercase mb-3 w-full text-left border-l-2 border-rose-500 pl-2">ISIN 淨浮盈虧排行</h3>
+                    <div class="w-full relative min-h-[220px] max-h-[260px] sm:max-h-[300px] flex-1">
                         <canvas id="pnlChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div>
-                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-amber-500 pl-2">Bucket 維度統計</h3>
+            <div class="space-y-3">
+                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest border-l-2 border-amber-500 pl-2">Bucket 維度統計</h3>
                 <div id="bucketSummaryContainer" class="asset-container"></div>
             </div>
-            <div class="pb-6">
-                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3 border-l-2 border-emerald-500 pl-2">ISIN 維度統計</h3>
+            
+            <div class="pb-6 space-y-3">
+                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest border-l-2 border-cyan-500 pl-2">ISIN 維度統計</h3>
                 <div id="isinSummaryContainer" class="asset-container"></div>
             </div>
         </div>
@@ -123,7 +124,6 @@
         </div>
 
         <div id="tab-master" class="hidden pb-6">
-            
             <div class="mb-5 space-y-3 max-w-md mx-auto">
                 <div class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mb-1 border-l border-emerald-500 pl-1.5">⚙️ 邊緣網絡核心路由 (備用防禦設施)</div>
                 <input type="text" id="workerUrlInput" onchange="saveWorkerUrl()" placeholder="https://fin-data-api.chortw.workers.dev" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-400 font-mono text-[10px] focus:outline-none focus:border-emerald-500 transition-colors">
@@ -321,7 +321,6 @@
             } catch (e) {}
         }
 
-        // 🛠️ BUG已完美修復：正式改回正統的 renderAll()
         function renderAll() {
             renderMaster(); 
             renderHoldings(); 
