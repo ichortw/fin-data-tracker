@@ -17,7 +17,6 @@
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-        /* 平板與桌機響應式網格 (CSS Grid) */
         .asset-container {
             display: grid;
             grid-template-columns: 1fr; 
@@ -32,22 +31,21 @@
             }
         }
 
-        /* 🛠️ 鋼鐵防線：硬核圖表佈局調節器（100% 免疫 Tailwind 誤判） */
         .charts-vertical-stack {
             display: flex;
-            flex-direction: column; /* 手機端：絕對強制垂直單欄排列 */
+            flex-direction: column; 
             gap: 24px;
             width: 100%;
         }
 
-        @media (min-width: 992px) { /* 抬高平板與寬螢幕閾值，確保普通手機絕不誤觸平排 */
+        @media (min-width: 992px) { 
             .charts-vertical-stack {
-                flex-direction: row; /* 寬螢幕：完美恢復左右平排 */
+                flex-direction: row; 
                 gap: 20px;
             }
             .charts-vertical-stack > div {
                 flex: 1;
-                min-width: 0; /* 防止 Chart.js 在彈性盒子內無限暴走撐開 */
+                min-width: 0; 
             }
         }
 
@@ -63,7 +61,7 @@
     <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
         <div class="max-w-5xl mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">金算盤 V8.2</h1>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">金算盤 V8.3</h1>
                 <p class="text-[10px] text-slate-400 mt-0.5 tracking-widest uppercase">Ultra-Lean Edge API</p>
             </div>
             <div class="flex space-x-2">
@@ -79,7 +77,7 @@
         <div class="max-w-5xl mx-auto mt-3 flex bg-slate-950 rounded-xl p-1 border border-slate-800">
             <button onclick="switchTab('overview')" id="tab-btn-overview" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-emerald-400 shadow transition-all">📊 總覽與圖表</button>
             <button onclick="switchTab('holdings')" id="tab-btn-holdings" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all">💼 資產帳戶</button>
-            <button onclick="switchTab('master')" id="tab-btn-master" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all">⚙️ ISIN 報價</button>
+            <button onclick="switchTab('master')" id="tab-btn-master" class="flex-1 py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-slate-200 transition-all">⚙️ 資產報價</button>
         </div>
     </header>
 
@@ -114,7 +112,7 @@
                     </div>
                 </div>
                 <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col items-center">
-                    <h3 class="text-xs text-slate-400 font-bold uppercase mb-3 w-full text-left border-l-2 border-rose-500 pl-2">ISIN 淨浮盈虧排行</h3>
+                    <h3 class="text-xs text-slate-400 font-bold uppercase mb-3 w-full text-left border-l-2 border-rose-500 pl-2">資產淨浮盈虧排行</h3>
                     <div class="w-full relative min-h-[220px] max-h-[260px] sm:max-h-[300px] flex-1">
                         <canvas id="pnlChart"></canvas>
                     </div>
@@ -127,7 +125,7 @@
             </div>
             
             <div class="pb-6 space-y-3">
-                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest border-l-2 border-cyan-500 pl-2">ISIN 維度統計</h3>
+                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest border-l-2 border-cyan-500 pl-2">標的維度統計</h3>
                 <div id="isinSummaryContainer" class="asset-container"></div>
             </div>
         </div>
@@ -157,7 +155,7 @@
             <div class="max-w-md mx-auto mb-4 border-t border-slate-900 pt-4">
                 <button onclick="openMasterModal()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-3 rounded-xl shadow-md transition-colors flex justify-center items-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span>新增 ISIN 標的</span>
+                    <span>新增市場標的</span>
                 </button>
             </div>
             <div id="masterContainer" class="asset-container"></div>
@@ -180,16 +178,17 @@
 
     <div id="masterModal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-50 items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm p-5 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
-            <h3 id="mModalTitle" class="text-base font-bold text-slate-100 mb-4 border-b border-slate-800 pb-2">新增 ISIN 標的</h3>
+            <h3 id="mModalTitle" class="text-base font-bold text-slate-100 mb-4 border-b border-slate-800 pb-2">新增市場標的</h3>
             <div class="space-y-3">
                 <div>
-                    <label class="text-[10px] text-slate-400">ISIN (12碼代碼，鎖定不可改)</label>
-                    <input type="text" id="mIsin" placeholder="ISIN (12碼大寫)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm uppercase mt-1">
+                    <label id="mIsinLabel" class="text-[10px] text-slate-400">ISIN / Ticker (鎖定不可改)</label>
+                    <input type="text" id="mIsin" placeholder="ISIN 或 Ticker" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm uppercase mt-1">
                 </div>
                 <div>
                     <label class="text-[10px] text-slate-400">資產類別</label>
                     <select id="mType" onchange="toggleInterestInputs()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-sm mt-1">
                         <option value="mutualfund">MutualFund (共同基金)</option>
+                        <option value="stock">Stock (港美股 Ticker)</option>
                         <option value="bond">Bond (公債)</option>
                     </select>
                 </div>
@@ -208,11 +207,11 @@
                         <input type="number" id="mIntFreq" min="1" max="12" placeholder="如: 12" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900 transition-all">
                     </div>
                     <div>
-                        <label class="text-[10px] text-emerald-400 font-bold">Interest Value</label>
+                        <label class="text-[10px] text-emerald-400 font-bold">手動覆蓋派息額</label>
                         <input type="text" id="mIntVal" placeholder="如: 0.073 或 6.45%" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm mt-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-slate-900 transition-all">
                     </div>
                 </div>
-                <p class="text-[8px] text-slate-500 leading-tight">ℹ️ 若無輸入派息頻率，系統將判定為累積型基金，其收益不計入現金流總收入。</p>
+                <p class="text-[8px] text-slate-500 leading-tight">ℹ️ 基金/股票若留白派息資訊，將自動回退嘗試套用 Yahoo API 取回的派息數據。</p>
             </div>
             <div class="grid grid-cols-2 gap-3 mt-6">
                 <button onclick="closeModals()" class="bg-slate-800 text-slate-300 py-2.5 rounded-lg text-sm">取消</button>
@@ -227,7 +226,7 @@
             <input type="hidden" id="hId"> 
             <div class="space-y-3">
                 <div>
-                    <label class="text-[10px] text-slate-400">關聯標的 (ISIN)</label>
+                    <label class="text-[10px] text-slate-400">關聯標的 (代碼)</label>
                     <select id="hIsin" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm mt-1"></select>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -286,7 +285,7 @@
         };
 
         async function updateEngine() {
-            if(dbMaster.length === 0) return alert('請先設定 ISIN 主檔！');
+            if(dbMaster.length === 0) return alert('請先設定資產主檔！');
             const btnText = document.getElementById('btnText');
             const btnIcon = document.getElementById('btnIcon');
             
@@ -367,10 +366,10 @@
                         incomeHKD = (100 * multiplier * h.qty * ld.divRate) / rate; 
                     }
                 } else {
-                    let valStr = mInfo.intVal || "0";
+                    let valStr = mInfo.intVal || "";
                     let freq = parseInt(mInfo.intFreq) || 0;
 
-                    if (freq > 0) {
+                    if (valStr !== "" && freq > 0) {
                         if (valStr.includes('%')) {
                             let pct = parseFloat(valStr.replace('%', '')) / 100;
                             if (!isNaN(pct)) incomeHKD = (h.qty * ld.price * pct) / rate;
@@ -378,6 +377,9 @@
                             let amt = parseFloat(valStr);
                             if (!isNaN(amt)) incomeHKD = (h.qty * amt * freq) / rate;
                         }
+                    } else if (valStr === "" && ld.divRate > 0) {
+                        // 雙保險：若前端無設定派息覆蓋，退回依賴 Yahoo API 回傳的絕對派息額
+                        incomeHKD = (h.qty * ld.divRate) / rate;
                     }
                 }
 
@@ -481,23 +483,41 @@
                             </div>`;
                         }
                     } else {
-                        let valStr = h.mInfo.intVal || "0";
+                        let valStr = h.mInfo.intVal || "";
                         let freq = parseInt(h.mInfo.intFreq) || 0;
-                        let isAccumulating = (freq === 0);
+                        let isAccumulating = false;
                         let cardCalcHKD = 0;
                         let displayTxt = valStr;
                         let freqTxt = h.mInfo.intFreq || '-';
                         
-                        if (valStr.includes('%')) {
-                            let pct = parseFloat(valStr.replace('%', '')) / 100;
-                            if (!isNaN(pct)) cardCalcHKD = (h.qty * h.ld.price * pct) / h.rate;
-                            if (!isAccumulating) freqTxt = '依市值 %'; 
-                        } else {
-                            let amt = parseFloat(valStr);
-                            if (!isNaN(amt) && freq > 0) cardCalcHKD = (h.qty * amt * freq) / h.rate;
+                        if (valStr !== "") {
+                            if (freq === 0) {
+                                isAccumulating = true;
+                                if (valStr.includes('%')) {
+                                    let pct = parseFloat(valStr.replace('%', '')) / 100;
+                                    if (!isNaN(pct)) cardCalcHKD = (h.qty * h.ld.price * pct) / h.rate;
+                                } else {
+                                    let amt = parseFloat(valStr);
+                                    if (!isNaN(amt)) cardCalcHKD = (h.qty * amt) / h.rate;
+                                }
+                            } else {
+                                if (valStr.includes('%')) {
+                                    let pct = parseFloat(valStr.replace('%', '')) / 100;
+                                    if (!isNaN(pct)) cardCalcHKD = (h.qty * h.ld.price * pct) / h.rate;
+                                    freqTxt = '依市值 %'; 
+                                } else {
+                                    let amt = parseFloat(valStr);
+                                    if (!isNaN(amt) && freq > 0) cardCalcHKD = (h.qty * amt * freq) / h.rate;
+                                }
+                            }
+                        } else if (valStr === "" && h.ld.divRate > 0) {
+                            cardCalcHKD = (h.qty * h.ld.divRate) / h.rate;
+                            displayTxt = h.ld.divRate.toFixed(4) + ' (API)';
+                            freqTxt = 'API 自動抓取';
+                            isAccumulating = false;
                         }
                         
-                        if (cardCalcHKD > 0 || parseFloat(valStr) > 0) {
+                        if (cardCalcHKD > 0 || parseFloat(valStr) > 0 || (valStr === "" && h.ld.divRate > 0)) {
                             if (isAccumulating) {
                                 extraPanel = `
                                 <div class="grid grid-cols-3 gap-2 text-[9px] bg-blue-950/40 p-2 rounded-b-lg border border-blue-900/50 mt-auto">
@@ -558,8 +578,8 @@
                     ? `<a href="${m.sourceUrl}" target="_blank" class="text-blue-400 hover:text-blue-300 underline truncate">Source 官方連結</a>` 
                     : `<span class="text-slate-500">未設定</span>`;
 
-                const paramHtml = m.type === 'mutualfund' 
-                    ? `<div class="text-[9px] text-slate-500 mt-1 truncate">⚙️ 參數: 頻率 [${m.intFreq || '-'}] | 數值 [${m.intVal || '-'}]</div>`
+                const paramHtml = (m.type === 'mutualfund' || m.type === 'stock') 
+                    ? `<div class="text-[9px] text-slate-500 mt-1 truncate">⚙️ 手動覆蓋: 頻率 [${m.intFreq || '-'}] | 數值 [${m.intVal || '-'}]</div>`
                     : '';
 
                 cont.innerHTML += `
@@ -588,12 +608,21 @@
         }
 
         function toggleInterestInputs() {
-            const isBond = document.getElementById('mType').value === 'bond';
+            const type = document.getElementById('mType').value;
+            const isBond = (type === 'bond');
+            
             document.getElementById('mIntFreq').disabled = isBond;
             document.getElementById('mIntVal').disabled = isBond;
             if (isBond) {
                 document.getElementById('mIntFreq').value = '';
                 document.getElementById('mIntVal').value = '';
+            }
+            
+            const label = document.getElementById('mIsinLabel');
+            if (type === 'stock') {
+                label.innerText = '股票代碼 (Ticker, 如 AAPL, 0700.HK)';
+            } else {
+                label.innerText = 'ISIN (12碼代碼，鎖定不可改)';
             }
         }
 
@@ -602,7 +631,7 @@
             const typeSelect = document.getElementById('mType');
             
             if (isin) {
-                document.getElementById('mModalTitle').innerText = '✏️ 編輯 ISIN 主檔';
+                document.getElementById('mModalTitle').innerText = '✏️ 編輯市場標的';
                 const m = dbMaster.find(x => x.isin === isin);
                 isinInput.value = m.isin; isinInput.disabled = true;
                 typeSelect.value = m.type; typeSelect.disabled = true; 
@@ -611,7 +640,7 @@
                 document.getElementById('mIntFreq').value = m.intFreq || '';
                 document.getElementById('mIntVal').value = m.intVal || '';
             } else {
-                document.getElementById('mModalTitle').innerText = '➕ 新增 ISIN 標的';
+                document.getElementById('mModalTitle').innerText = '➕ 新增市場標的';
                 isinInput.value = ''; isinInput.disabled = false;
                 typeSelect.value = 'mutualfund'; typeSelect.disabled = false;
                 document.getElementById('mName').value = '';
@@ -632,12 +661,12 @@
             const intFreq = document.getElementById('mIntFreq').value;
             const intVal = document.getElementById('mIntVal').value.trim();
 
-            if(!isin || !name) return alert("請完整填寫 ISIN 與資產名稱！");
+            if(!isin || !name) return alert("請完整填寫代碼與資產名稱！");
 
-            if (type === 'mutualfund' && intVal !== '' && !intVal.includes('%')) {
+            if ((type === 'mutualfund' || type === 'stock') && intVal !== '' && !intVal.includes('%')) {
                 const freqNum = parseInt(intFreq);
                 if (isNaN(freqNum) || freqNum < 1 || freqNum > 12) {
-                    return alert("當 Interest Value 輸入定額數字（不含 %）時，必須輸入 1 到 12 之間的派息頻率！");
+                    return alert("當手動覆蓋數值輸入定額數字（不含 %）時，必須輸入 1 到 12 之間的派息頻率！");
                 }
             }
 
@@ -648,7 +677,7 @@
                 dbMaster[idx].intFreq = intFreq;
                 dbMaster[idx].intVal = intVal;
             } else {
-                if(dbMaster.find(m => m.isin === isin)) return alert("該 ISIN 已存在於主檔中！");
+                if(dbMaster.find(m => m.isin === isin)) return alert("該代碼已存在於主檔中！");
                 dbMaster.push({ isin, type, name, sourceUrl, intFreq, intVal });
             }
 
@@ -658,7 +687,7 @@
 
         function delMaster(isin) {
             if(dbHoldings.find(h => h.isin === isin)) return alert("無法刪除！因為在「資產帳戶」中仍有部位團隊綁定此標的。請先清空該帳戶部位。");
-            if(confirm('確定刪除此 ISIN 主檔？')) {
+            if(confirm('確定刪除此市場主檔？')) {
                 dbMaster = dbMaster.filter(m => m.isin !== isin);
                 localStorage.setItem('v6_isin_master', JSON.stringify(dbMaster));
                 renderAll();
@@ -668,7 +697,7 @@
         function openHoldingModal(id = null) {
             const hIsinSel = document.getElementById('hIsin');
             hIsinSel.innerHTML = dbMaster.map(m => `<option value="${m.isin}">${m.isin} - ${m.name}</option>`).join('');
-            if(dbMaster.length === 0) return alert("請先至 [ISIN 報價] 頁籤新增標的");
+            if(dbMaster.length === 0) return alert("請先至 [資產報價] 頁籤新增標的");
 
             if (id) {
                 document.getElementById('hModalTitle').innerText = '編輯資產子帳戶';
@@ -702,7 +731,7 @@
 
             if (!id) {
                 if(dbHoldings.find(h => h.bucket === bucket && h.isin === isin)) {
-                    return alert(`該 Bucket [${bucket}] 中已存在相同的 ISIN，請直接編輯該筆部位即可！`);
+                    return alert(`該 Bucket [${bucket}] 中已存在相同的標的，請直接編輯該筆部位即可！`);
                 }
                 dbHoldings.push({ id: `pos_${Date.now()}`, isin, bucket, currency, qty, avgPrice: avg });
             } else {
@@ -725,7 +754,7 @@
         function backupJSON() {
             const data = { schema_version: "1.1", export_date: new Date().toISOString(), master: dbMaster, holdings: dbHoldings };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            forceDownload(blob, `AssetTracker_V8.2_${new Date().toISOString().slice(0, 10)}.json`);
+            forceDownload(blob, `AssetTracker_V8.3_${new Date().toISOString().slice(0, 10)}.json`);
         }
 
         function restoreJSON(event) {
@@ -759,7 +788,7 @@
         }
 
         function exportPublicCSV() {
-            let csv = "資產名稱,ISIN,類別,最新報價,派息頻率,派息數值,資料來源網址,清算時間\n";
+            let csv = "資產名稱,代碼,類別,最新報價,手動派息頻率,手動派息數值,資料來源網址,清算時間\n";
             dbMaster.forEach(m => {
                 const lp = liveData[m.isin];
                 csv += `"${m.name}","${m.isin}","${m.type}","${lp?.price || '---'}","${m.intFreq || '-'}","${m.intVal || '-'}","${m.sourceUrl}","${lp?.updateTime || '-'}"\n`;
@@ -769,7 +798,7 @@
 
         function exportPrivateCSV() {
             if(!confirm("⚠️ 嚴重警告！\n此導出報表包含您真實的財富總值、持有數量與浮盈虧等高度私密資訊。\n\n為了安全，系統將自動封鎖社交分享面板，僅允許儲存於本機。確定要導出嗎？")) return;
-            let csv = "Bucket,子帳戶 ID,關聯標的(ISIN),資產名稱,結算幣別,持有數量,平均買入價,現價,帳戶市值(HKD),帳戶浮盈虧(HKD)\n";
+            let csv = "Bucket,子帳戶 ID,關聯標的(代碼),資產名稱,結算幣別,持有數量,平均買入價,現價,帳戶市值(HKD),帳戶浮盈虧(HKD)\n";
             dbHoldings.forEach(h => {
                 const mInfo = dbMaster.find(m => m.isin === h.isin) || { name: '未知', type: 'mutualfund' };
                 const ld = liveData[h.isin] || { price: 0 };
@@ -818,11 +847,15 @@
         function seedDefaultData() {
             dbMaster = [
                 { isin: 'US912810UB25', type: 'bond', name: '美元國債 2044', sourceUrl: 'https://tw.tradingview.com/symbols/EUROTLX-US912810UB25/', intFreq: '', intVal: '' },
-                { isin: 'IE0004WJOWO1', type: 'mutualfund', name: 'PIMCO收益基金港元派息', sourceUrl: 'https://www.pimco.com/hk/zh/investments/gis/pimco-balanced-income-and-growth-fund/mretl-hkd-unhedged-income-ii', intFreq: '12', intVal: '0.073' }
+                { isin: 'IE0004WJOWO1', type: 'mutualfund', name: 'PIMCO收益基金港元派息', sourceUrl: 'https://www.pimco.com/hk/zh/investments/gis/pimco-balanced-income-and-growth-fund/mretl-hkd-unhedged-income-ii', intFreq: '12', intVal: '0.073' },
+                { isin: 'AAPL', type: 'stock', name: 'Apple Inc.', sourceUrl: 'https://finance.yahoo.com/quote/AAPL', intFreq: '', intVal: '' },
+                { isin: '0700.HK', type: 'stock', name: '騰訊控股', sourceUrl: 'https://finance.yahoo.com/quote/0700.HK', intFreq: '', intVal: '' }
             ];
             dbHoldings = [
                 { id: 'pos_1', isin: 'US912810UB25', bucket: 'WL', currency: 'USD', qty: 70000, avgPrice: 98.125 },
-                { id: 'pos_2', isin: 'IE0004WJOWO1', bucket: 'HB', currency: 'HKD', qty: 46500.661, avgPrice: 10.99 }
+                { id: 'pos_2', isin: 'IE0004WJOWO1', bucket: 'HB', currency: 'HKD', qty: 46500.661, avgPrice: 10.99 },
+                { id: 'pos_3', isin: 'AAPL', bucket: 'EQ', currency: 'USD', qty: 100, avgPrice: 150.00 },
+                { id: 'pos_4', isin: '0700.HK', bucket: 'EQ', currency: 'HKD', qty: 500, avgPrice: 300.00 }
             ];
             localStorage.setItem('v6_isin_master', JSON.stringify(dbMaster));
             localStorage.setItem('v6_asset_holdings', JSON.stringify(dbHoldings));
