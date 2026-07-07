@@ -17,6 +17,7 @@
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
+        /* 平板與桌機響應式網格 (CSS Grid) 僅保留給總覽圖表與主檔 */
         .asset-container {
             display: grid;
             grid-template-columns: 1fr; 
@@ -125,8 +126,8 @@
             </div>
             
             <div class="pb-6 space-y-3">
-                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest border-l-2 border-cyan-500 pl-2">標的維度統計</h3>
-                <div id="isinSummaryContainer" class="asset-container"></div>
+                <h3 class="text-xs text-slate-400 font-bold uppercase tracking-widest border-l-2 border-cyan-500 pl-2">標的維度統計 (資產類別)</h3>
+                <div id="isinSummaryContainer" class="flex flex-col gap-4"></div>
             </div>
         </div>
 
@@ -137,7 +138,7 @@
                     <span>開設資產子帳戶</span>
                 </button>
             </div>
-            <div id="holdingsContainer" class="asset-container"></div>
+            <div id="holdingsContainer" class="flex flex-col gap-4 w-full"></div>
         </div>
 
         <div id="tab-master" class="hidden pb-6">
@@ -378,18 +379,17 @@
                             if (!isNaN(amt)) incomeHKD = (h.qty * amt * freq) / rate;
                         }
                     } else if (valStr === "" && ld.divRate > 0) {
-                        // 雙保險：若前端無設定派息覆蓋，退回依賴 Yahoo API 回傳的絕對派息額
                         incomeHKD = (h.qty * ld.divRate) / rate;
                     }
                 }
 
                 grandTotalMkt += mktValueHKD; grandTotalCost += costHKD; grandTotalIncome += incomeHKD;
 
-                if(!bucketMap[h.bucket]) bucketMap[h.bucket] = { mkt: 0, pnl: 0 };
-                bucketMap[h.bucket].mkt += mktValueHKD; bucketMap[h.bucket].pnl += pnlHKD;
+                if(!bucketMap[h.bucket]) bucketMap[h.bucket] = { mkt: 0, pnl: 0, income: 0 };
+                bucketMap[h.bucket].mkt += mktValueHKD; bucketMap[h.bucket].pnl += pnlHKD; bucketMap[h.bucket].income += incomeHKD;
 
-                if(!isinMap[h.isin]) isinMap[h.isin] = { mkt: 0, pnl: 0, name: mInfo.name };
-                isinMap[h.isin].mkt += mktValueHKD; isinMap[h.isin].pnl += pnlHKD;
+                if(!isinMap[h.isin]) isinMap[h.isin] = { mkt: 0, pnl: 0, income: 0, name: mInfo.name, type: mInfo.type };
+                isinMap[h.isin].mkt += mktValueHKD; isinMap[h.isin].pnl += pnlHKD; isinMap[h.isin].income += incomeHKD;
             });
 
             document.getElementById('grandTotalValue').innerText = `$${formatNum(grandTotalMkt)}`;
@@ -405,12 +405,59 @@
             const bLabels = [], bData = [];
             Object.keys(bucketMap).sort((a,b)=>bucketMap[b].mkt - bucketMap[a].mkt).forEach(b => {
                 bLabels.push(b); bData.push(bucketMap[b].mkt);
-                bCont.innerHTML += createSummaryRow(`[${b}]`, bucketMap[b].mkt, bucketMap[b].pnl);
+                bCont.innerHTML += createSummaryRow(`[${b}]`, bucketMap[b].mkt, bucketMap[b].pnl, bucketMap[b].income);
             });
 
+            // 標的維度區塊：依照 Mutual Funds, Bonds, Stocks 進行手風琴子夾分類
             const iCont = document.getElementById('isinSummaryContainer'); iCont.innerHTML = '';
-            Object.keys(isinMap).sort((a,b)=>isinMap[b].mkt - isinMap[a].mkt).forEach(i => {
-                iCont.innerHTML += createSummaryRow(isinMap[i].name, isinMap[i].mkt, isinMap[i].pnl, i);
+            
+            const groups = {
+                'mutualfund': { label: 'Mutual Funds (共同基金)', items: [], mkt: 0, pnl: 0, income: 0, color: 'text-blue-400' },
+                'bond': { label: 'Bonds (公債)', items: [], mkt: 0, pnl: 0, income: 0, color: 'text-emerald-400' },
+                'stock': { label: 'Stocks (港美股)', items: [], mkt: 0, pnl: 0, income: 0, color: 'text-amber-400' }
+            };
+
+            Object.keys(isinMap).forEach(i => {
+                const data = isinMap[i];
+                const t = data.type || 'mutualfund';
+                if(groups[t]) {
+                    groups[t].items.push({ isin: i, ...data });
+                    groups[t].mkt += data.mkt;
+                    groups[t].pnl += data.pnl;
+                    groups[t].income += data.income;
+                }
+            });
+
+            Object.keys(groups).forEach(key => {
+                const g = groups[key];
+                if (g.items.length === 0) return;
+                
+                // 每個子夾內部依照市值排序
+                g.items.sort((a,b) => b.mkt - a.mkt);
+                
+                const pColor = g.pnl >= 0 ? 'text-emerald-400' : 'text-rose-500';
+                const pSign = g.pnl >= 0 ? '+' : '';
+
+                let groupHtml = `
+                <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                    <button onclick="toggleGroup('group-${key}')" class="w-full flex justify-between items-center p-3 bg-slate-800/40 hover:bg-slate-800 transition-colors">
+                        <div class="text-left">
+                            <span class="text-sm font-bold ${g.color}">${g.label}</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">共 ${g.items.length} 檔標的</p>
+                        </div>
+                        <div class="text-right flex flex-col items-end space-y-0.5">
+                            <p class="text-[11px] font-mono text-slate-200"><span class="text-[9px] text-slate-500 mr-1">總市值</span>$${formatNum(g.mkt)}</p>
+                            <p class="text-[11px] font-mono ${pColor}"><span class="text-[9px] text-slate-500 mr-1">總盈虧</span>${pSign}$${formatNum(g.pnl)}</p>
+                            <p class="text-[11px] font-mono text-emerald-300"><span class="text-[9px] text-slate-500 mr-1">預估年收</span>+$${formatNum(g.income)}</p>
+                        </div>
+                    </button>
+                    <div id="group-${key}" class="hidden p-3 pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-950/40 border-t border-slate-800/50">
+                `;
+                g.items.forEach(item => {
+                    groupHtml += createSummaryRow(item.name, item.mkt, item.pnl, item.income, item.isin);
+                });
+                groupHtml += `</div></div>`;
+                iCont.innerHTML += groupHtml;
             });
 
             const cLabels = [], cData = [], cColors = [];
@@ -422,20 +469,32 @@
             updateCharts(bLabels, bData, cLabels, cData, cColors);
         }
 
-        function createSummaryRow(title, mkt, pnl, subtitle='') {
+        // 新增 3 行資料的公用 Row 生成器
+        function createSummaryRow(title, mkt, pnl, income, subtitle='') {
             const pColor = pnl >= 0 ? 'text-emerald-400' : 'text-rose-500';
             const pSign = pnl >= 0 ? '+' : '';
             return `
-            <div class="flex justify-between items-center bg-slate-900/50 p-2 rounded-lg border border-slate-800 h-full">
-                <div class="truncate pr-2">
+            <div class="flex justify-between items-center bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 h-full">
+                <div class="truncate pr-2 flex-1">
                     <p class="text-sm font-bold text-slate-200 truncate">${title}</p>
-                    ${subtitle ? `<p class="text-[9px] text-slate-500 font-mono">${subtitle}</p>` : ''}
+                    ${subtitle ? `<p class="text-[9px] text-slate-500 font-mono mt-0.5">${subtitle}</p>` : ''}
                 </div>
-                <div class="text-right flex-shrink-0">
-                    <p class="text-sm font-mono text-slate-100">$${formatNum(mkt)}</p>
-                    <p class="text-[10px] font-mono ${pColor}">${pSign}$${formatNum(pnl)}</p>
+                <div class="text-right flex-shrink-0 flex flex-col justify-center space-y-0.5">
+                    <p class="text-[11px] font-mono text-slate-300"><span class="text-[9px] text-slate-500 mr-1">市值</span>$${formatNum(mkt)}</p>
+                    <p class="text-[11px] font-mono ${pColor}"><span class="text-[9px] text-slate-500 mr-1">盈虧</span>${pSign}$${formatNum(pnl)}</p>
+                    <p class="text-[11px] font-mono text-emerald-300"><span class="text-[9px] text-slate-500 mr-1">年收</span>+$${formatNum(income)}</p>
                 </div>
             </div>`;
+        }
+
+        // 手風琴群組切換
+        function toggleGroup(id) {
+            const el = document.getElementById(id);
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
         }
 
         function updateCharts(bLabels, bData, cLabels, cData, cColors) {
